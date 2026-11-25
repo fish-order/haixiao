@@ -67,11 +67,11 @@
           <div>
             <div class="flex items-center gap-1.5 flex-wrap">
               <h1 class="text-sm sm:text-base font-bold leading-tight tracking-wide">海嘯觀賞魚・爬蟲批發</h1>
-              <span id="appVersionBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-teal-950/60 text-teal-100 border border-teal-400/40">v1.1.1</span>
+              <span id="appVersionBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-teal-950/60 text-teal-100 border border-teal-400/40">v1.1.2</span>
             </div>
             <p id="cloudSyncStatus" class="text-[11px] text-teal-200 flex items-center gap-1">
               <span id="cloudSyncDot" class="inline-block w-2 h-2 rounded-full bg-amber-300"></span>
-              <span id="cloudSyncText">連線 Firebase 中...</span>
+              <span id="cloudSyncText">連線後端資料庫中...</span>
             </p>
           </div>
         </div>
@@ -755,7 +755,7 @@
       '南部 魚中魚-楠梓店'
     ];
 
-    const APP_VERSION = 'v1.1.1';
+    const APP_VERSION = 'v1.1.2';
     const STORAGE_KEY = 'haixiao_fish_wholesale_v7';
 
     const FIREBASE_CONFIG = {
@@ -788,7 +788,7 @@
     async function pushAllStateToFirestore() {
       if (!db || !cloudReady || suppressCloudWrite) return;
       try {
-        setSyncStatus('saving', '同步至 Firebase 中...');
+        setSyncStatus('saving', '同步至後端資料庫中...');
         const ts = new Date().toISOString();
         const col = db.collection(FS_COLLECTION);
         const batch = db.batch();
@@ -809,11 +809,11 @@
         batch.set(col.doc('mortality'), { logs: state.mortalityLogs, updatedAt: ts });
         batch.set(col.doc('history'), { records: state.shipmentHistory, updatedAt: ts });
         await batch.commit();
-        setSyncStatus('online', `Firebase 已同步 (${FIREBASE_CONFIG.projectId})`);
+        setSyncStatus('online', '後端資料庫即時同步');
       } catch (err) {
         console.warn('Firestore write error:', err);
         if (err && err.code === 'permission-denied') {
-          setSyncStatus('error', 'Firebase 規則未開放寫入（目前本機暫存）');
+          setSyncStatus('error', '後端資料庫權限未開放寫入（目前本機暫存）');
         } else {
           setSyncStatus('error', '雲端同步失敗（已暫存本機）');
         }
@@ -828,7 +828,7 @@
 
     async function initFirebaseSync() {
       if (typeof firebase === 'undefined') {
-        setSyncStatus('offline', '本機模式（未載入 Firebase SDK）');
+        setSyncStatus('offline', '離線／本機模式');
         return;
       }
       try {
@@ -843,9 +843,9 @@
         cloudReady = true;
 
         if (!invDoc.exists) {
-          setSyncStatus('saving', '首次建立 Firebase 初始資料...');
+          setSyncStatus('saving', '首次建立後端資料庫初始資料...');
           await pushAllStateToFirestore();
-          showToast('已將初始存貨與訂單同步至 Firebase 資料庫');
+          showToast('已將初始存貨與訂單同步至後端資料庫');
         }
 
         // Subscribe to real-time updates across all 6 documents
@@ -867,7 +867,7 @@
           } finally {
             suppressCloudWrite = false;
           }
-          setSyncStatus('online', `Firebase 即時同步中 (${FIREBASE_CONFIG.projectId})`);
+          setSyncStatus('online', '後端資料庫即時同步');
         };
 
         col.doc('inventory').onSnapshot(snap => {
@@ -920,7 +920,7 @@
           }
         }, err => handleSnapErr(err));
 
-        setSyncStatus('online', `Firebase 即時同步中 (${FIREBASE_CONFIG.projectId})`);
+        setSyncStatus('online', '後端資料庫即時同步');
       } catch (err) {
         console.warn('Firebase init error:', err);
         handleSnapErr(err);
@@ -929,7 +929,7 @@
 
     function handleSnapErr(err) {
       if (err && err.code === 'permission-denied') {
-        setSyncStatus('error', 'Firestore 規則未開放讀寫（本機模式）');
+        setSyncStatus('error', '後端資料庫權限未開放讀寫（本機模式）');
       } else {
         setSyncStatus('offline', '離線／本機儲存模式');
       }
