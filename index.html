@@ -67,7 +67,7 @@
           <div>
             <div class="flex items-center gap-1.5 flex-wrap">
               <h1 class="text-sm sm:text-base font-bold leading-tight tracking-wide">海嘯觀賞魚・爬蟲批發</h1>
-              <span id="appVersionBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-teal-950/60 text-teal-100 border border-teal-400/40">v1.1.0</span>
+              <span id="appVersionBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-teal-950/60 text-teal-100 border border-teal-400/40">v1.1.1</span>
             </div>
             <p id="cloudSyncStatus" class="text-[11px] text-teal-200 flex items-center gap-1">
               <span id="cloudSyncDot" class="inline-block w-2 h-2 rounded-full bg-amber-300"></span>
@@ -755,7 +755,7 @@
       '南部 魚中魚-楠梓店'
     ];
 
-    const APP_VERSION = 'v1.1.0';
+    const APP_VERSION = 'v1.1.1';
     const STORAGE_KEY = 'haixiao_fish_wholesale_v7';
 
     const FIREBASE_CONFIG = {
@@ -2348,8 +2348,40 @@
 
     function renderShippingTab() {
       const storeSel = document.getElementById('shipStoreSelect');
-      storeSel.innerHTML = buildGroupedStoreOptionsHtml(state.stores, state.currentShipStore, s => {
-        return (state.orders[s] && state.orders[s].length > 0) ? '（有訂購單）' : '（無訂購單）';
+      const orderedStores = [];
+      const candidateStores = [...state.stores];
+      Object.keys(state.orders || {}).forEach(s => { if (!candidateStores.includes(s)) candidateStores.push(s); });
+      Object.keys(state.shipments || {}).forEach(s => { if (!candidateStores.includes(s)) candidateStores.push(s); });
+
+      candidateStores.forEach(s => {
+        const hasOrd = state.orders[s] && state.orders[s].length > 0;
+        const hasShip = state.shipments[s] && state.shipments[s].length > 0;
+        if (hasOrd || hasShip) orderedStores.push(s);
+      });
+
+      if (orderedStores.length === 0) {
+        storeSel.innerHTML = `<option value="">目前無待出貨訂購單</option>`;
+        document.getElementById('shipOrderDateDisplay').textContent = '-';
+        document.getElementById('shipShipDate').value = '';
+        document.getElementById('shipArchiveNotice').classList.add('hidden');
+        document.getElementById('shipDeductBadge').textContent = '無待出貨單';
+        document.getElementById('shipDeductBadge').className = 'text-[11px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full border border-slate-200 font-medium';
+        document.getElementById('shipList').innerHTML = `<div class="bg-white rounded-2xl p-6 text-center text-slate-400 text-sm border border-slate-200">目前沒有任何店家有訂購單，請先至「訂購單」建立訂單。</div>`;
+        document.getElementById('shipTotalOrdered').textContent = '0';
+        document.getElementById('shipTotalActual').textContent = '0';
+        document.getElementById('shipTotalAmount').textContent = '$0';
+        lucide.createIcons();
+        return;
+      }
+
+      if (!orderedStores.includes(state.currentShipStore)) {
+        state.currentShipStore = orderedStores[0];
+      }
+
+      storeSel.innerHTML = buildGroupedStoreOptionsHtml(orderedStores, state.currentShipStore, s => {
+        const deductedObj = state.shipDeducted[s];
+        const isConfirmed = !!(state.shipConfirmedAt[s] || (deductedObj && Object.values(deductedObj).some(v => v > 0)));
+        return isConfirmed ? '（✓ 已包裝完成）' : '（待包魚出貨）';
       });
 
       const store = state.currentShipStore;
