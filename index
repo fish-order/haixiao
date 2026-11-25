@@ -1,0 +1,2904 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>海嘯觀賞魚・爬蟲批發系統</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #f1f5f9;
+    }
+    input, select, textarea { font-size: 16px !important; }
+
+    /* Print layout: show ONLY the sticker sheet with custom dimensions & margins */
+    #printStickerSheet { display: none; }
+    @media print {
+      body > *:not(#printStickerSheet) { display: none !important; }
+      body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+      #printStickerSheet {
+        display: block !important;
+        width: 100%;
+      }
+      .print-sticker-cell {
+        box-sizing: border-box;
+        break-inside: avoid;
+        page-break-inside: avoid;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .print-sticker-card {
+        border: 1px solid #000 !important;
+        border-radius: 1.5mm;
+        padding: 1.5mm 2mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        background: #fff !important;
+        color: #000 !important;
+        overflow: hidden;
+      }
+      .print-single-page {
+        page-break-after: always;
+        break-after: page;
+      }
+    }
+  </style>
+  <style id="dynamicPrintPageStyle"></style>
+</head>
+<body class="text-slate-800 pb-14">
+
+  <!-- Sticky Top Header + Main 4-Tab Bar -->
+  <div class="sticky top-0 z-30 shadow-md">
+    <header class="bg-teal-800 text-white">
+      <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-teal-600/80 flex items-center justify-center border border-teal-400/30">
+            <i data-lucide="fish" class="w-4 h-4 text-teal-100"></i>
+          </div>
+          <div>
+            <h1 class="text-sm sm:text-base font-bold leading-tight tracking-wide">海嘯觀賞魚・爬蟲批發</h1>
+            <p class="text-[11px] text-teal-200">手機優先測試版（本地儲存）</p>
+          </div>
+        </div>
+        <button id="btnResetDemo" class="text-xs bg-teal-700 hover:bg-teal-600 active:bg-teal-900 px-2.5 py-1.5 rounded-lg border border-teal-500/40 flex items-center gap-1 transition">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>重設範例</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Top Primary Navigation Tabs (5 Tabs) -->
+    <nav class="bg-white border-b border-slate-200">
+      <div class="max-w-2xl mx-auto grid grid-cols-5">
+        <button data-tab="inventory" class="nav-btn py-2 px-0.5 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 text-teal-700 font-bold border-b-2 border-teal-700 transition">
+          <i data-lucide="boxes" class="w-4 h-4 shrink-0"></i>
+          <span class="text-[11px] sm:text-xs whitespace-nowrap">目前存貨</span>
+        </button>
+        <button data-tab="order" class="nav-btn py-2 px-0.5 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 text-slate-500 font-medium border-b-2 border-transparent hover:text-teal-700 transition relative">
+          <i data-lucide="clipboard-list" class="w-4 h-4 shrink-0"></i>
+          <span class="text-[11px] sm:text-xs whitespace-nowrap">訂購單</span>
+          <span id="navOrderBadge" class="hidden absolute top-1 right-1 sm:static bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">0</span>
+        </button>
+        <button data-tab="shipping" class="nav-btn py-2 px-0.5 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 text-slate-500 font-medium border-b-2 border-transparent hover:text-teal-700 transition relative">
+          <i data-lucide="package-check" class="w-4 h-4 shrink-0"></i>
+          <span class="text-[10px] sm:text-xs leading-tight text-center">出貨單/包魚記錄</span>
+          <span id="navShipBadge" class="hidden absolute top-1 right-1 sm:static bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">0</span>
+        </button>
+        <button data-tab="mortality" class="nav-btn py-2 px-0.5 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 text-slate-500 font-medium border-b-2 border-transparent hover:text-rose-600 transition relative">
+          <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+          <span class="text-[11px] sm:text-xs whitespace-nowrap">死魚記錄</span>
+          <span id="navMortBadge" class="hidden absolute top-1 right-1 sm:static bg-rose-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">0</span>
+        </button>
+        <button data-tab="history" class="nav-btn py-2 px-0.5 flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 text-slate-500 font-medium border-b-2 border-transparent hover:text-teal-700 transition">
+          <i data-lucide="history" class="w-4 h-4 shrink-0"></i>
+          <span class="text-[11px] sm:text-xs whitespace-nowrap">歷史出貨查詢</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Main Container -->
+  <main class="max-w-2xl mx-auto px-3 pt-4">
+
+    <!-- ==================== TAB 1: 目前存貨 ==================== -->
+    <section id="tab-inventory" class="space-y-3">
+      <div class="flex gap-2">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input id="invSearch" type="text" placeholder="搜尋魚種、爬蟲、尺寸或備註..." class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+        </div>
+        <button id="btnOpenAddInv" class="bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-medium px-3.5 py-2.5 rounded-xl shadow-sm flex items-center gap-1.5 shrink-0 transition">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>新增</span>
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span class="font-semibold text-slate-700">種類篩選（全部顯示）</span>
+          <span id="invCatTotalBadge" class="text-[11px] text-teal-700 font-medium"></span>
+        </div>
+        <div id="invCategoryPills" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-slate-500 px-1">
+        <span id="invCountLabel">共 0 項存貨</span>
+        <span>點擊鉛筆圖示可編輯</span>
+      </div>
+
+      <div id="invList" class="space-y-2.5"></div>
+    </section>
+
+    <!-- ==================== TAB 2: 訂購單 ==================== -->
+    <section id="tab-order" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="store" class="w-4 h-4 text-teal-600"></i>
+            <span>訂購店家與日期設定</span>
+          </h2>
+          <span class="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">滿 $5,000 出貨</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">選擇常用店家</label>
+            <select id="ordStoreSelect" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">或新增店家（先選地區再輸入店名）</label>
+            <div class="flex gap-1.5">
+              <select id="ordNewStoreRegion" class="w-20 px-2 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium shrink-0 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <option value="北部">北部</option>
+                <option value="中部">中部</option>
+                <option value="南部" selected>南部</option>
+              </select>
+              <input id="ordNewStoreInput" type="text" placeholder="輸入新店名..." class="flex-1 min-w-0 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              <button id="btnAddStore" class="px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white text-sm rounded-xl shrink-0">確定</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 pt-1 border-t border-slate-100">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">訂購日期（預設今日）</label>
+            <input id="ordOrderDate" type="date" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">出貨日期（預設下週一）</label>
+            <input id="ordShipDate" type="date" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="clipboard-plus" class="w-4 h-4 text-teal-600"></i>
+            <span>加入訂購品項</span>
+          </h2>
+          <span class="text-xs text-teal-700 font-semibold bg-teal-50 px-2 py-0.5 rounded-lg">目前店家：<span id="ordActiveStoreBadge"></span></span>
+        </div>
+
+        <!-- Quick Direct Search (No Category Needed) -->
+        <div class="relative">
+          <label class="block text-xs font-semibold text-teal-700 mb-1">快速搜尋魚種／爬蟲（免選種類，直接點選）</label>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-teal-600 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="ordItemSearch" type="text" placeholder="輸入關鍵字，例如：紅蓮燈、紅鼻、豹龜..." class="w-full pl-9 pr-9 py-2.5 bg-teal-50/40 border border-teal-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500" />
+            <button id="btnClearOrdSearch" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div id="ordSearchResults" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-20 divide-y divide-slate-100"></div>
+        </div>
+
+        <div class="flex items-center gap-2 text-[11px] text-slate-400">
+          <div class="flex-1 h-px bg-slate-200"></div>
+          <span>或依種類挑選</span>
+          <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">1. 選擇種類（類別）</label>
+          <select id="ordCategorySelect" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"></select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">2. 選擇魚種／品名（僅顯示該類別）</label>
+          <select id="ordItemSelect" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"></select>
+        </div>
+
+        <div id="ordItemPreview" class="bg-teal-50/70 border border-teal-200 rounded-xl p-3 space-y-1.5 text-sm hidden">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">Size：<strong id="prevSize" class="text-slate-900">-</strong></span>
+            <span class="text-slate-600">現有庫存：<strong id="prevStock" class="text-teal-700">0</strong></span>
+          </div>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <span>一般價：<strong id="prevRegPrice" class="text-slate-800">$0</strong></span>
+            <span id="prevDiscWrap" class="text-emerald-700 font-medium hidden">優惠：<strong id="prevDiscRule"></strong></span>
+          </div>
+          <p id="prevNote" class="text-xs text-amber-700 hidden"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 items-end">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">3. 所需數量</label>
+            <input id="ordQtyInput" type="number" min="1" inputmode="numeric" placeholder="輸入數量" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold" />
+          </div>
+          <div class="bg-slate-100 rounded-xl px-3 py-2 text-right">
+            <div class="text-[11px] text-slate-500" id="ordCalcUnitLabel">單價：$0</div>
+            <div class="text-base font-bold text-teal-800" id="ordCalcSubtotal">小計 $0</div>
+          </div>
+        </div>
+
+        <button id="btnAddToOrder" class="w-full py-3 bg-teal-700 hover:bg-teal-800 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition">
+          <i data-lucide="plus-circle" class="w-5 h-5"></i>
+          <span>加入訂購清單</span>
+        </button>
+      </div>
+
+      <!-- Unified Active Orders Section (Collapsible Per Store, Editable Inline) -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="shopping-cart" class="w-4 h-4 text-teal-600"></i>
+            <span>已成立訂購單（共 <span id="allOrdersCount" class="text-teal-700">0</span> 家）</span>
+          </h2>
+          <span class="text-[11px] text-slate-400">點選展開可編輯明細</span>
+        </div>
+        <div id="allOrdersList" class="space-y-2.5"></div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: 出貨單 ==================== -->
+    <section id="tab-shipping" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="truck" class="w-4 h-4 text-teal-600"></i>
+            <span>選擇出貨店家</span>
+          </h2>
+          <span id="shipDeductBadge" class="text-[11px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-medium">尚未扣庫存</span>
+        </div>
+        <select id="shipStoreSelect" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold"></select>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">訂購日期（唯讀，於訂購單修改）</label>
+            <div id="shipOrderDateDisplay" class="w-full px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 select-none">-</div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">出貨日期（預設下週一）</label>
+            <input id="shipShipDate" type="date" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+          </div>
+        </div>
+        <div id="shipArchiveNotice" class="hidden text-xs bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-xl px-3 py-2 flex items-center justify-between gap-2 flex-wrap">
+          <span id="shipArchiveNoticeText"></span>
+          <button id="btnManualArchiveNow" type="button" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-semibold rounded-lg shrink-0">立即結轉至歷史</button>
+        </div>
+        <p class="text-xs text-slate-500">優惠價依原訂購量鎖定；確認出貨扣庫存後仍會保留在此頁供核對，至該週星期三系統將自動統一移至「歷史出貨查詢」。</p>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between px-1">
+          <h3 class="text-sm font-bold text-slate-700">包魚出貨明細</h3>
+          <button id="btnOpenAddShipItem" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>增加品項</span>
+          </button>
+        </div>
+        <div id="shipList" class="space-y-2.5"></div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="grid grid-cols-2 gap-2 text-sm bg-slate-50 p-3 rounded-xl">
+          <div>
+            <div class="text-xs text-slate-500">原訂購總數</div>
+            <div class="font-bold text-slate-700"><span id="shipTotalOrdered">0</span> 隻/顆</div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-slate-500">實際包出總數</div>
+            <div class="font-bold text-teal-700"><span id="shipTotalActual">0</span> 隻/顆</div>
+          </div>
+        </div>
+        <div class="flex justify-between items-baseline px-1">
+          <span class="text-sm font-medium text-slate-600">實際出貨總金額</span>
+          <span class="text-2xl font-extrabold text-teal-700" id="shipTotalAmount">$0</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btnSaveShipping" class="py-3 bg-teal-700 hover:bg-teal-800 active:scale-[0.98] text-white font-bold rounded-xl text-sm flex items-center justify-center gap-1.5 shadow-sm transition">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            <span>確認出貨並扣庫存</span>
+          </button>
+          <button id="btnCopyShippingText" class="py-3 bg-slate-800 hover:bg-slate-900 active:scale-[0.98] text-white font-bold rounded-xl text-sm flex items-center justify-center gap-1.5 shadow-sm transition">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span>複製出貨單</span>
+          </button>
+        </div>
+        <div id="shipActionStatus" class="hidden text-xs font-medium px-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          <span id="shipActionStatusText"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: 每日死魚記錄 ==================== -->
+    <section id="tab-mortality" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>
+            <span>新增每日死魚／折損記錄</span>
+          </h2>
+          <span class="text-[11px] bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full border border-rose-200 font-medium">確定後自動扣庫存</span>
+        </div>
+
+        <!-- Quick Direct Search for Mortality (No Category Needed) -->
+        <div class="relative">
+          <label class="block text-xs font-semibold text-rose-700 mb-1">快速搜尋魚種／爬蟲（免選種類，直接點選）</label>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-rose-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="mortItemSearch" type="text" placeholder="輸入魚名快速尋找，例如：鼠魚、紅蓮燈..." class="w-full pl-9 pr-9 py-2.5 bg-rose-50/40 border border-rose-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400" />
+            <button id="btnClearMortSearch" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1">
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div id="mortSearchResults" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-20 divide-y divide-slate-100"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">記錄日期（預設今日）</label>
+            <input id="mortDateInput" type="date" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">1. 選擇種類</label>
+            <select id="mortCategorySelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"></select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">2. 選擇魚種／爬蟲</label>
+          <select id="mortItemSelect" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl"></select>
+        </div>
+
+        <div id="mortItemPreview" class="bg-rose-50/60 border border-rose-200 rounded-xl px-3 py-2 flex items-center justify-between text-xs hidden">
+          <span class="text-slate-600">尺寸：<strong id="mortPrevSize" class="text-slate-800">-</strong></span>
+          <span class="text-slate-600">目前存貨：<strong id="mortPrevStock" class="text-teal-700 text-sm">0</strong> 隻</span>
+        </div>
+
+        <div class="grid grid-cols-12 gap-2.5">
+          <div class="col-span-5">
+            <label class="block text-xs font-medium text-slate-500 mb-1">3. 死魚數量</label>
+            <input id="mortQtyInput" type="number" min="1" inputmode="numeric" placeholder="輸入數量" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-rose-700" />
+          </div>
+          <div class="col-span-7">
+            <label class="block text-xs font-medium text-slate-500 mb-1">原因／備註（選填）</label>
+            <input id="mortReasonInput" type="text" placeholder="例如：緊迫、水質..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" data-reason="緊迫死亡" class="btn-mort-reason text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg">緊迫死亡</button>
+          <button type="button" data-reason="水質變化" class="btn-mort-reason text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg">水質變化</button>
+          <button type="button" data-reason="到貨損耗" class="btn-mort-reason text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg">到貨損耗</button>
+          <button type="button" data-reason="跳缸/受傷" class="btn-mort-reason text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg">跳缸/受傷</button>
+          <button type="button" data-reason="不明原因" class="btn-mort-reason text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg">不明原因</button>
+        </div>
+
+        <button id="btnAddMortality" class="w-full py-3 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+          <span>確定記錄並扣庫存</span>
+        </button>
+
+        <div id="mortActionStatus" class="hidden text-xs font-medium px-3 py-2.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+          <span id="mortActionStatusText"></span>
+        </div>
+      </div>
+
+      <!-- Mortality Log History -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h3 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="history" class="w-4 h-4 text-slate-500"></i>
+            <span>死魚記錄明細</span>
+          </h3>
+          <div class="flex items-center gap-1.5">
+            <input id="mortFilterDate" type="date" class="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs" />
+            <button id="btnMortShowAll" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg">顯示全部</button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between bg-rose-50/70 px-3 py-2 rounded-xl border border-rose-100 text-xs">
+          <span class="text-slate-600">此範圍累計折損：<strong id="mortTotalQty" class="text-rose-700 text-sm">0</strong> 隻</span>
+          <button id="btnCopyMortText" class="text-teal-700 font-semibold hover:underline flex items-center gap-1">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span>複製報表</span>
+          </button>
+        </div>
+
+        <div id="mortLogList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: 歷史出貨查詢 (純查詢／對帳) ==================== -->
+    <section id="tab-history" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="history" class="w-4 h-4 text-teal-600"></i>
+            <span>歷史出貨查詢（純查詢／對帳）</span>
+          </h2>
+          <div class="flex gap-1">
+            <button type="button" id="btnHistPresetAll" class="text-[11px] px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium">全部</button>
+            <button type="button" id="btnHistPresetMonth" class="text-[11px] px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium">本月</button>
+            <button type="button" id="btnHistPresetToday" class="text-[11px] px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium">今日</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">出貨日起</label>
+            <input id="histDateFrom" type="date" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">出貨日迄</label>
+            <input id="histDateTo" type="date" class="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">篩選店家</label>
+            <select id="histStoreFilter" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">搜尋魚種／單號／備註</label>
+            <input id="histSearchInput" type="text" placeholder="輸入關鍵字..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+          </div>
+        </div>
+
+        <!-- Reconciliation Totals -->
+        <div class="grid grid-cols-3 gap-2 bg-teal-50/70 border border-teal-200 rounded-xl p-3 text-center">
+          <div>
+            <div class="text-[11px] text-slate-500">符合單數</div>
+            <div class="text-base font-extrabold text-slate-800"><span id="histSummaryCount">0</span> 筆</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-500">實出總隻數</div>
+            <div class="text-base font-extrabold text-teal-700"><span id="histSummaryQty">0</span> 隻</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-500">對帳總金額</div>
+            <div class="text-base font-extrabold text-teal-800" id="histSummaryAmt">$0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Wednesday Archive Notice -->
+      <div id="histPendingBanner" class="hidden bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-3 text-xs text-indigo-800 flex items-center justify-between gap-2 flex-wrap">
+        <span id="histPendingText"></span>
+        <button id="btnArchiveFromHistoryTab" type="button" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shrink-0">立即統一移入歷史</button>
+      </div>
+
+      <!-- Read-only History List -->
+      <div id="histList" class="space-y-2.5"></div>
+    </section>
+
+  </main>
+
+  <!-- Modal: Customizable Sticker Print Preview -->
+  <div id="stickerModal" class="fixed inset-0 z-50 bg-slate-900/60 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl p-5 space-y-3 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between shrink-0">
+        <div>
+          <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+            <i data-lucide="printer" class="w-5 h-5 text-amber-500"></i>
+            <span>包魚貼紙設定與列印</span>
+          </h3>
+          <p class="text-xs text-slate-500">支援 A4多格、捲紙熱感機、長條貼紙與底紙留邊</p>
+        </div>
+        <button id="btnCloseStickerModal" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto space-y-3 pr-1 flex-1">
+        <!-- Custom Paper & Sticker Layout Settings -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2.5">
+          <div class="flex items-center justify-between flex-wrap gap-1.5">
+            <span class="text-xs font-bold text-slate-700">快速套用常用格式</span>
+            <div class="flex flex-wrap gap-1">
+              <button type="button" data-preset="a4" class="btn-sticker-preset text-[11px] px-2 py-1 bg-white border border-slate-200 hover:border-teal-500 rounded-lg text-slate-700">A4三欄</button>
+              <button type="button" data-preset="50x30" class="btn-sticker-preset text-[11px] px-2 py-1 bg-white border border-slate-200 hover:border-teal-500 rounded-lg text-slate-700">50×30捲紙</button>
+              <button type="button" data-preset="70x50" class="btn-sticker-preset text-[11px] px-2 py-1 bg-white border border-slate-200 hover:border-teal-500 rounded-lg text-slate-700">70×50捲紙</button>
+              <button type="button" data-preset="strip15" class="btn-sticker-preset text-[11px] px-2 py-1 bg-white border border-slate-200 hover:border-teal-500 rounded-lg text-slate-700">15mm長條</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-500 mb-0.5">排列方式</label>
+              <select id="stLayoutMode" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs">
+                <option value="grid">多格網格（A4／多欄張頁）</option>
+                <option value="single">捲紙單張（熱感機一包一頁）</option>
+                <option value="strip">長條連續捲紙（如 15×300mm）</option>
+              </select>
+            </div>
+            <div id="stColsWrap">
+              <label class="block text-[11px] text-slate-500 mb-0.5">每列欄數（多格適用）</label>
+              <input id="stCols" type="number" min="1" max="6" value="3" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-500 mb-0.5">貼紙寬度 (mm)</label>
+              <input id="stWidth" type="number" min="10" max="210" step="0.5" value="60" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-500 mb-0.5">貼紙高度 (mm)</label>
+              <input id="stHeight" type="number" min="8" max="150" step="0.5" value="38" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
+            </div>
+          </div>
+
+          <!-- Backing Paper Margin (留邊) -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-500 mb-0.5">底紙上下留邊 (各 mm，無則0)</label>
+              <input id="stPadY" type="number" min="0" max="20" step="0.5" value="0" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-500 mb-0.5">底紙左右留邊 (各 mm，無則0)</label>
+              <input id="stPadX" type="number" min="0" max="20" step="0.5" value="0" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
+            </div>
+          </div>
+          <div id="stBackingCalcHint" class="text-[11px] text-teal-800 bg-teal-50/70 px-2.5 py-1.5 rounded-lg border border-teal-100"></div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div id="stGapXWrap">
+              <label class="block text-[11px] text-slate-500 mb-0.5">貼紙水平間距 (mm)</label>
+              <input id="stGapX" type="number" min="0" max="30" step="0.5" value="5" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
+            </div>
+            <div id="stGapYWrap">
+              <label id="stGapYLabel" class="block text-[11px] text-slate-500 mb-0.5">貼紙垂直間距 (mm)</label>
+              <input id="stGapY" type="number" min="0" max="30" step="0.5" value="5" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-500 mb-0.5">字體大小</label>
+              <select id="stFontScale" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs">
+                <option value="sm">偏小</option>
+                <option value="md" selected>標準</option>
+                <option value="lg">偏大</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Printer Driver Override Toggle -->
+          <label class="flex items-start gap-2 pt-1 border-t border-slate-200 cursor-pointer">
+            <input id="stUseDriverPaper" type="checkbox" class="mt-0.5 w-4 h-4 accent-teal-700" />
+            <span class="text-[11px] text-slate-600 leading-snug">
+              <strong class="text-slate-800">由印表機介面自行設定紙張</strong>（勾選後網頁不鎖定紙張大小，按列印後直接在系統視窗選取已安裝的印表機並用其驅動介面設定即可）
+            </span>
+          </label>
+        </div>
+
+        <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+          <button id="btnToggleBagControls" type="button" class="w-full px-3 py-2.5 flex items-center justify-between gap-2 text-left hover:bg-slate-100 transition">
+            <span class="text-xs font-bold text-slate-700">各品項分裝包數設定（預設:一魚種一包）</span>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-xs font-bold text-teal-700">共 <span id="stickerTotalCount">0</span> 張</span>
+              <span id="bagToggleLabel" class="text-[11px] text-slate-500 font-medium">展開 ▾</span>
+            </div>
+          </button>
+          <div id="stickerBagControls" class="hidden px-3 pb-3 pt-1 space-y-1.5 border-t border-slate-200 bg-white"></div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-200">
+          <div class="text-xs font-bold text-slate-600 mb-2">即時貼紙預覽（外虛線為底紙留邊）：</div>
+          <div id="stickerPreviewGrid" class="grid gap-2"></div>
+        </div>
+      </div>
+
+      <div class="space-y-1.5 pt-2 shrink-0 border-t border-slate-100">
+        <p class="text-[11px] text-slate-500 text-center">點選下方按鈕後，系統會列出電腦／手機已安裝的所有印表機供選擇與細部設定</p>
+        <div class="flex gap-2">
+          <button id="btnCancelStickerModal" class="px-4 py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-xl text-sm">關閉</button>
+          <button id="btnDoPrintStickers" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-1.5 shadow-sm">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>開啟系統列印（選取印表機）</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden Print Container -->
+  <div id="printStickerSheet"></div>
+
+  <!-- Modal: Add / Edit Inventory Item -->
+  <div id="invModal" class="fixed inset-0 z-50 bg-slate-900/50 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-3 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <h3 id="invModalTitle" class="text-base font-bold text-slate-800">新增存貨品項</h3>
+        <button id="btnCloseInvModal" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <input type="hidden" id="editInvId" />
+      <div class="space-y-2.5">
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">類別</label>
+          <input id="editInvCategory" type="text" list="categoryDatalist" placeholder="例如：燈科魚，小型魚、爬蟲" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+          <datalist id="categoryDatalist"></datalist>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">品名（魚種／爬蟲名稱）</label>
+          <input id="editInvName" type="text" placeholder="例如：紅蓮燈(進口人工)" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">目前數量</label>
+            <input id="editInvStock" type="number" min="0" inputmode="numeric" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Size（尺寸）</label>
+            <input id="editInvSize" type="text" placeholder="例如：1.2-1.5cm" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">一般價</label>
+            <input id="editInvRegPrice" type="number" min="0" step="0.1" inputmode="decimal" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">優惠門檻(隻)</label>
+            <input id="editInvDiscQty" type="number" min="1" inputmode="numeric" placeholder="選填" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">優惠價</label>
+            <input id="editInvDiscPrice" type="number" min="0" step="0.1" inputmode="decimal" placeholder="選填" class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">備註</label>
+          <input id="editInvNote" type="text" placeholder="例如：含CITES、特價、10+1..." class="w-full px-3 py-2 border border-slate-200 rounded-xl" />
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button id="btnDeleteInvItem" class="px-4 py-2.5 bg-rose-50 text-rose-600 font-semibold rounded-xl hidden">刪除</button>
+        <button id="btnSaveInvItem" class="flex-1 py-2.5 bg-teal-700 text-white font-bold rounded-xl">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Item to Shipping -->
+  <div id="shipAddModal" class="fixed inset-0 z-50 bg-slate-900/50 hidden items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-800">出貨單追加品項</h3>
+        <button id="btnCloseShipAddModal" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="space-y-2.5">
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">選擇種類</label>
+          <select id="shipAddCategory" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">選擇品名</label>
+          <select id="shipAddItem" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">實際出貨量</label>
+            <input id="shipAddQty" type="number" min="1" value="10" inputmode="numeric" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">備註</label>
+            <input id="shipAddNote" type="text" placeholder="現場加包..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+          </div>
+        </div>
+      </div>
+      <button id="btnConfirmShipAdd" class="w-full py-3 bg-teal-700 text-white font-bold rounded-xl">加入出貨單</button>
+    </div>
+  </div>
+
+  <!-- Confirm Dialog Modal -->
+  <div id="confirmModal" class="fixed inset-0 z-50 bg-slate-900/50 hidden items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-4 shadow-xl">
+      <h3 id="confirmTitle" class="text-base font-bold text-slate-800">確認操作</h3>
+      <p id="confirmMessage" class="text-sm text-slate-600"></p>
+      <div class="flex gap-2 justify-end">
+        <button id="btnConfirmCancel" class="px-4 py-2 bg-slate-100 text-slate-700 font-medium rounded-xl text-sm">取消</button>
+        <button id="btnConfirmOk" class="px-4 py-2 bg-rose-600 text-white font-bold rounded-xl text-sm">確定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prominent Floating Bottom Toast Notification -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] max-w-[92vw] px-5 py-3 rounded-2xl shadow-2xl border text-sm font-bold flex items-center gap-2 opacity-0 translate-y-2 pointer-events-none transition-all duration-200 bg-emerald-700 text-white border-emerald-500">
+    <span id="toastIcon">✓</span>
+    <span id="toastText"></span>
+  </div>
+
+  <script>
+    const INITIAL_INVENTORY = [{"id": "item_001", "category": "爬蟲", "name": "櫻桃紅腿龜(含CITES", "stockQty": 15, "size": "5-7cm", "regularPrice": 4000.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_002", "category": "爬蟲", "name": "肯亞豹龜(含CITES，爆白紋", "stockQty": 15, "size": "6-7cm", "regularPrice": 3000.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_003", "category": "爬蟲", "name": "肯亞豹龜(含CITES", "stockQty": 15, "size": "4-5cm", "regularPrice": 2200.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_004", "category": "爬蟲", "name": "黃腿象龜(含CITES，中，以過冬過", "stockQty": 15, "size": "10-12cm", "regularPrice": 4000.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_005", "category": "爬蟲", "name": "黑王蛇", "stockQty": 15, "size": "12-14cm", "regularPrice": 900.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_006", "category": "爬蟲", "name": "環頸蜥", "stockQty": 15, "size": "12-14cm", "regularPrice": 6000.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_007", "category": "爬蟲", "name": "桃紅側頸龜 (腳掌不見缺趾嚴重出清，買一送一", "stockQty": 15, "size": "3-4cm", "regularPrice": 1400.0, "discountThreshold": null, "discountPrice": null, "note": "10+1"}, {"id": "item_008", "category": "爬蟲", "name": "韋氏蟾頭龜", "stockQty": 15, "size": "8-10cm", "regularPrice": 1500.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_009", "category": "爬蟲", "name": "吉布斯蟾頭龜", "stockQty": 15, "size": "14-16cm", "regularPrice": 1500.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_010", "category": "水草", "name": "迷你山間榕", "stockQty": 200, "size": "-", "regularPrice": 550.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_011", "category": "燈科魚，小型魚", "name": "西里伯斯青鱂(野)", "stockQty": 200, "size": "2-3cm", "regularPrice": 150.0, "discountThreshold": 50, "discountPrice": 140.0, "note": ""}, {"id": "item_012", "category": "燈科魚，小型魚", "name": "馬塔稻田魚(野)", "stockQty": 200, "size": "2-3cm", "regularPrice": 150.0, "discountThreshold": 50, "discountPrice": 140.0, "note": ""}, {"id": "item_013", "category": "燈科魚，小型魚", "name": "剛果燈(進口人工)", "stockQty": 200, "size": "2.5-3cm", "regularPrice": 18.0, "discountThreshold": 100, "discountPrice": 17.0, "note": ""}, {"id": "item_014", "category": "燈科魚，小型魚", "name": "白子帝王燈(進口人工)", "stockQty": 200, "size": "2.5-3cm", "regularPrice": 15.0, "discountThreshold": 100, "discountPrice": 14.0, "note": ""}, {"id": "item_015", "category": "燈科魚，小型魚", "name": "斑節鱂(進口人工)", "stockQty": 200, "size": "0.8-1.2cm", "regularPrice": 12.0, "discountThreshold": 100, "discountPrice": 11.0, "note": ""}, {"id": "item_016", "category": "燈科魚，小型魚", "name": "白子紅鼻剪刀(進口人工，最後)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 11.0, "discountThreshold": 100, "discountPrice": 10.0, "note": ""}, {"id": "item_017", "category": "燈科魚，小型魚", "name": "黃金紅鼻剪刀(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 11.0, "discountThreshold": 100, "discountPrice": 10.0, "note": ""}, {"id": "item_018", "category": "燈科魚，小型魚", "name": "白金紅鼻剪刀(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 11.0, "discountThreshold": 100, "discountPrice": 10.0, "note": ""}, {"id": "item_019", "category": "燈科魚，小型魚", "name": "大帆月光燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 11.0, "discountThreshold": 100, "discountPrice": 10.0, "note": ""}, {"id": "item_020", "category": "燈科魚，小型魚", "name": "圓身企鵝燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 10.0, "discountThreshold": 100, "discountPrice": 9.0, "note": ""}, {"id": "item_021", "category": "燈科魚，小型魚", "name": "黃金/白子日光燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 8.0, "discountThreshold": 100, "discountPrice": 7.0, "note": ""}, {"id": "item_022", "category": "燈科魚，小型魚", "name": "黃金/白子紅蓮燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 8.0, "discountThreshold": 100, "discountPrice": 7.0, "note": ""}, {"id": "item_023", "category": "燈科魚，小型魚", "name": "酒紅鉛筆燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 8.0, "discountThreshold": 100, "discountPrice": 7.0, "note": ""}, {"id": "item_024", "category": "燈科魚，小型魚", "name": "紅肚鉛筆燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 7.0, "discountThreshold": 100, "discountPrice": 6.5, "note": ""}, {"id": "item_025", "category": "燈科魚，小型魚", "name": "紅旗(進口人工)", "stockQty": 200, "size": "1.5-2cm", "regularPrice": 6.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_026", "category": "燈科魚，小型魚", "name": "紅鼻剪刀(進口人工)", "stockQty": 200, "size": "2-2.5cm", "regularPrice": 5.0, "discountThreshold": 100, "discountPrice": 4.5, "note": ""}, {"id": "item_027", "category": "燈科魚，小型魚", "name": "紅蓮燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 4.0, "discountThreshold": 500, "discountPrice": 3.8, "note": ""}, {"id": "item_028", "category": "燈科魚，小型魚", "name": "日光燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 4.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_029", "category": "燈科魚，小型魚", "name": "迷你燈(進口人工)", "stockQty": 200, "size": "2.5-3cm", "regularPrice": 2.0, "discountThreshold": null, "discountPrice": null, "note": "特價"}, {"id": "item_030", "category": "燈科魚，小型魚", "name": "白金藍肩黃金魔鬼燈(野)", "stockQty": 200, "size": "4-5cm", "regularPrice": 550.0, "discountThreshold": 10, "discountPrice": 500.0, "note": ""}, {"id": "item_031", "category": "燈科魚，小型魚", "name": "火靈燈(野)", "stockQty": 200, "size": "0.8-1.2cm", "regularPrice": 100.0, "discountThreshold": 10, "discountPrice": 95.0, "note": ""}, {"id": "item_032", "category": "燈科魚，小型魚", "name": "黑箭毒藥(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 60.0, "discountThreshold": 50, "discountPrice": 55.0, "note": ""}, {"id": "item_033", "category": "燈科魚，小型魚", "name": "紅月可卡燈(進口人工)", "stockQty": 200, "size": "2-2.5cm", "regularPrice": 55.0, "discountThreshold": 50, "discountPrice": 50.0, "note": ""}, {"id": "item_034", "category": "燈科魚，小型魚", "name": "魔幻紅鱗燈(進口人工)", "stockQty": 200, "size": "2-2.5cm", "regularPrice": 50.0, "discountThreshold": 50, "discountPrice": 45.0, "note": ""}, {"id": "item_035", "category": "燈科魚，小型魚", "name": "藍鑽紅梅燈(進口人工)", "stockQty": 200, "size": "2-2.5cm", "regularPrice": 45.0, "discountThreshold": 50, "discountPrice": 40.0, "note": ""}, {"id": "item_036", "category": "燈科魚，小型魚", "name": "火蟻燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 45.0, "discountThreshold": 50, "discountPrice": 40.0, "note": ""}, {"id": "item_037", "category": "燈科魚，小型魚", "name": "紅唇可卡燈(進口人工)", "stockQty": 200, "size": "2.5-3cm", "regularPrice": 40.0, "discountThreshold": 50, "discountPrice": 35.0, "note": ""}, {"id": "item_038", "category": "燈科魚，小型魚", "name": "赤焰綠翡翠(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 30.0, "discountThreshold": 50, "discountPrice": 25.0, "note": ""}, {"id": "item_039", "category": "燈科魚，小型魚", "name": "帝王藍燈(進口人工)", "stockQty": 200, "size": "0.8-1cm", "regularPrice": 30.0, "discountThreshold": 50, "discountPrice": 25.0, "note": ""}, {"id": "item_040", "category": "燈科魚，小型魚", "name": "甜心檸檬燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 25.0, "discountThreshold": 100, "discountPrice": 22.0, "note": ""}, {"id": "item_041", "category": "燈科魚，小型魚", "name": "超級彩虹藍帝燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 17.0, "discountThreshold": 100, "discountPrice": 15.0, "note": ""}, {"id": "item_042", "category": "燈科魚，小型魚", "name": "大帆金白雲山(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 13.0, "discountThreshold": 100, "discountPrice": 12.0, "note": ""}, {"id": "item_043", "category": "燈科魚，小型魚", "name": "黑尾大勾鰭(進口人工)", "stockQty": 200, "size": "3-4cm", "regularPrice": 10.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_044", "category": "燈科魚，小型魚", "name": "白雲山燈(進口人工)", "stockQty": 200, "size": "1.2-1.5cm", "regularPrice": 7.0, "discountThreshold": 100, "discountPrice": 6.5, "note": ""}, {"id": "item_045", "category": "燈科魚，小型魚", "name": "大帆珍珠燈(野)", "stockQty": 200, "size": "2.5-3cm", "regularPrice": 120.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_046", "category": "燈科魚，小型魚", "name": "藍焰斑馬(野)", "stockQty": 200, "size": "3.5-4.5cm", "regularPrice": 65.0, "discountThreshold": 100, "discountPrice": 60.0, "note": ""}, {"id": "item_047", "category": "燈科魚，小型魚", "name": "七彩水晶鰭(野)", "stockQty": 200, "size": "0.8-1.2cm", "regularPrice": 100.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_048", "category": "燈科魚，小型魚", "name": "紅翅彩虹可卡燈(野)", "stockQty": 200, "size": "4-5cm", "regularPrice": 900.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_049", "category": "燈科魚，小型魚", "name": "超級紅魔鬼燈(野)", "stockQty": 200, "size": "1.5-2cm", "regularPrice": 450.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_050", "category": "燈科魚，小型魚", "name": "血心燈(野，哥倫比亞)", "stockQty": 200, "size": "3-3.5cm", "regularPrice": 70.0, "discountThreshold": 100, "discountPrice": 65.0, "note": ""}, {"id": "item_051", "category": "鼠魚", "name": "精靈鼠(進口人工)", "stockQty": 200, "size": "0.8-1.2cm", "regularPrice": 12.0, "discountThreshold": 100, "discountPrice": 11.0, "note": ""}, {"id": "item_052", "category": "鼠魚", "name": "長吻黑珍珠鼠(野，限量)", "stockQty": 200, "size": "5-6cm", "regularPrice": 2500.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_053", "category": "鼠魚", "name": "短吻金翅帝王鼠(野)", "stockQty": 200, "size": "5-6cm", "regularPrice": 650.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_054", "category": "鼠魚", "name": "國王豹鼠(野)", "stockQty": 200, "size": "3.5-4.5cm", "regularPrice": 600.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_055", "category": "鼠魚", "name": "瓜波鼠(野)", "stockQty": 200, "size": "3.5-4.5cm", "regularPrice": 550.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_056", "category": "鼠魚", "name": "雙色紅帆鼠(野)", "stockQty": 200, "size": "5-6cm", "regularPrice": 750.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_057", "category": "鼠魚", "name": "月光鼠(進口人工)", "stockQty": 200, "size": "0.8-1cm", "regularPrice": 65.0, "discountThreshold": 100, "discountPrice": 60.0, "note": ""}, {"id": "item_058", "category": "鼠魚", "name": "青銅鼠(野)", "stockQty": 200, "size": "4-5cm", "regularPrice": 180.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_059", "category": "鼠魚", "name": "金線咖啡鼠(野)", "stockQty": 200, "size": "3.5-4cm", "regularPrice": 350.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_060", "category": "鼠魚", "name": "羅伯斯鼠(野)", "stockQty": 200, "size": "8-10cm", "regularPrice": 1000.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_061", "category": "鼠魚", "name": "超級舒瓦茲鼠(野)", "stockQty": 200, "size": "4-6cm", "regularPrice": 450.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_062", "category": "鼠魚", "name": "紅帆鼠(野，中)", "stockQty": 200, "size": "4-5cm", "regularPrice": 330.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_063", "category": "鼠魚", "name": "精靈鼠(野)", "stockQty": 200, "size": "1.5-2cm", "regularPrice": 25.0, "discountThreshold": 100, "discountPrice": 22.0, "note": ""}, {"id": "item_064", "category": "鼠魚", "name": "蕊娜鼠(進口人工)", "stockQty": 200, "size": "2.5-3cm", "regularPrice": 400.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_065", "category": "鼠魚", "name": "皇冠黑背鼠(野)", "stockQty": 200, "size": "4-5cm", "regularPrice": 280.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_066", "category": "鼠魚", "name": "CW101露易莎鼠(野)", "stockQty": 200, "size": "4-5cm", "regularPrice": 450.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_067", "category": "金魚、錦鯉魚", "name": "五花元寶獅頭(陸產", "stockQty": 200, "size": "9-11cm", "regularPrice": 750.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_068", "category": "金魚、錦鯉魚", "name": "鵝頭朱鱗(陸產", "stockQty": 200, "size": "5-6cm", "regularPrice": 45.0, "discountThreshold": 100, "discountPrice": 40.0, "note": ""}, {"id": "item_069", "category": "金魚、錦鯉魚", "name": "水泡眼(陸產", "stockQty": 200, "size": "5-6cm", "regularPrice": 30.0, "discountThreshold": 100, "discountPrice": 25.0, "note": ""}, {"id": "item_070", "category": "神仙，七彩神仙", "name": "白子紅妃七彩(進口人工)", "stockQty": 200, "size": "9-11cm", "regularPrice": 1500.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_071", "category": "神仙，七彩神仙", "name": "野血紅阿蓮卡七彩(進口人工)", "stockQty": 200, "size": "9-11cm", "regularPrice": 1200.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_072", "category": "神仙，七彩神仙", "name": "黑格爾七彩(野)", "stockQty": 200, "size": "12-14cm", "regularPrice": 3500.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_073", "category": "慈鯛", "name": "瑪迪拉藍袖短雕(野，不分公母，鑑定中，可索照)", "stockQty": 200, "size": "1.5-2cm", "regularPrice": 450.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_074", "category": "慈鯛", "name": "曼波六間(進口人工)", "stockQty": 200, "size": "3-3.5cm", "regularPrice": 280.0, "discountThreshold": 30, "discountPrice": 255.0, "note": ""}, {"id": "item_075", "category": "慈鯛", "name": "熊貓六間(進口人工)", "stockQty": 200, "size": "3-3.5cm", "regularPrice": 220.0, "discountThreshold": 30, "discountPrice": 190.0, "note": ""}, {"id": "item_076", "category": "慈鯛", "name": "白子紅肚鳳凰(進口人工)", "stockQty": 200, "size": "4-5cm", "regularPrice": 70.0, "discountThreshold": 50, "discountPrice": 60.0, "note": ""}, {"id": "item_077", "category": "慈鯛", "name": "白子女王燕尾(進口人工)", "stockQty": 200, "size": "4-5cm", "regularPrice": 50.0, "discountThreshold": 50, "discountPrice": 40.0, "note": ""}, {"id": "item_078", "category": "印尼LUCKY魚場系列，台灣唯一總代理", "name": "血紅龍(LUCKY魚場)", "stockQty": 15, "size": "16-18cm", "regularPrice": 6500.0, "discountThreshold": 10, "discountPrice": 6000.0, "note": ""}, {"id": "item_079", "category": "馬來西亞祥龍魚場系列", "name": "過背金龍(祥龍魚場)", "stockQty": 15, "size": "16-18cm", "regularPrice": 5000.0, "discountThreshold": 10, "discountPrice": 4700.0, "note": ""}, {"id": "item_080", "category": "馬來西亞祥龍魚場系列", "name": "高背金龍(祥龍魚場)", "stockQty": 15, "size": "14-16cm", "regularPrice": 2700.0, "discountThreshold": 10, "discountPrice": 2650.0, "note": ""}, {"id": "item_081", "category": "馬來西亞祥龍魚場系列", "name": "斑迦紅龍(祥龍魚場)", "stockQty": 15, "size": "14-16cm", "regularPrice": 2000.0, "discountThreshold": 10, "discountPrice": 1950.0, "note": ""}, {"id": "item_082", "category": "龍魚", "name": "白子銀帶(進口人工)", "stockQty": 15, "size": "7-9cm", "regularPrice": 450.0, "discountThreshold": 30, "discountPrice": 440.0, "note": "30隻以上440，100隻以上400"}, {"id": "item_083", "category": "龍魚", "name": "銀帶(進口人工)", "stockQty": 15, "size": "7-9cm", "regularPrice": 180.0, "discountThreshold": 30, "discountPrice": 170.0, "note": "30隻以上170，100隻以上150"}, {"id": "item_084", "category": "迷鳃", "name": "姬瑪微蓋鬥魚(野)", "stockQty": 200, "size": "2-2.5cm", "regularPrice": 400.0, "discountThreshold": 30, "discountPrice": 350.0, "note": ""}, {"id": "item_085", "category": "其它魚", "name": "冰山美人(野)", "stockQty": 200, "size": "7-9cm", "regularPrice": 450.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_086", "category": "其它魚", "name": "紅河美人(野)", "stockQty": 200, "size": "7-9cm", "regularPrice": 450.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_087", "category": "其它魚", "name": "紅線美人(野)", "stockQty": 200, "size": "5-6cm", "regularPrice": 250.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_088", "category": "其它魚", "name": "黑魔鬼(進口人工)", "stockQty": 200, "size": "4-5cm", "regularPrice": 35.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_089", "category": "其它魚", "name": "皇冠黑白魟(滿月魚，以開口", "stockQty": 200, "size": "12-14cm", "regularPrice": 4500.0, "discountThreshold": null, "discountPrice": null, "note": "4500/隨機 / 對魚9500"}, {"id": "item_090", "category": "其它魚", "name": "橙邊鰟鮍(野)", "stockQty": 200, "size": "3-4cm", "regularPrice": 280.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_091", "category": "其它魚", "name": "火山鰟鮍(野)", "stockQty": 200, "size": "3-4cm", "regularPrice": 250.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_092", "category": "其它魚", "name": "汕尾鰟鮍(野)", "stockQty": 200, "size": "3-4cm", "regularPrice": 220.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_093", "category": "其它魚", "name": "薰衣草鰟鮍(野)", "stockQty": 200, "size": "3-4cm", "regularPrice": 220.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_094", "category": "其它魚", "name": "墨脫藍吉羅(野)", "stockQty": 200, "size": "8-10cm", "regularPrice": 150.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_095", "category": "蝦", "name": "玫瑰蝦", "stockQty": 200, "size": "L", "regularPrice": 1.5, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_096", "category": "蝦", "name": "紅蝦", "stockQty": 200, "size": "1-1.5", "regularPrice": 2.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_097", "category": "蝦", "name": "綜合米蝦", "stockQty": 200, "size": "L", "regularPrice": 2.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_098", "category": "蝦", "name": "極火蝦", "stockQty": 200, "size": "L", "regularPrice": 3.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_099", "category": "蝦", "name": "極火蝦", "stockQty": 200, "size": "XL", "regularPrice": 4.5, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_100", "category": "蝦", "name": "黃金米蝦", "stockQty": 200, "size": "L", "regularPrice": 3.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_101", "category": "蝦", "name": "金背米蝦", "stockQty": 200, "size": "XL", "regularPrice": 8.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_102", "category": "蝦", "name": "香吉士蝦", "stockQty": 200, "size": "L", "regularPrice": 2.5, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_103", "category": "蝦", "name": "香吉士蝦", "stockQty": 200, "size": "XL", "regularPrice": 6.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_104", "category": "蝦", "name": "血橙香吉士蝦", "stockQty": 200, "size": "XL", "regularPrice": 12.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_105", "category": "蝦", "name": "夢幻藍蝦", "stockQty": 200, "size": "L", "regularPrice": 3.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_106", "category": "蝦", "name": "夢幻藍蝦", "stockQty": 200, "size": "XL", "regularPrice": 6.5, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_107", "category": "蝦", "name": "紅琉璃蝦", "stockQty": 200, "size": "L", "regularPrice": 3.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_108", "category": "蝦", "name": "紅琉璃蝦", "stockQty": 200, "size": "XL", "regularPrice": 5.5, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_109", "category": "蝦", "name": "黑琉璃蝦", "stockQty": 200, "size": "L", "regularPrice": 5.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_110", "category": "蝦", "name": "雪球蝦", "stockQty": 200, "size": "XL", "regularPrice": 6.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_111", "category": "蝦", "name": "橘琉璃蝦", "stockQty": 200, "size": "XL", "regularPrice": 9.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_112", "category": "蝦", "name": "金沙蝦", "stockQty": 200, "size": "XL", "regularPrice": 25.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_113", "category": "螺", "name": "橙兔螺", "stockQty": 200, "size": "3-4cm", "regularPrice": 35.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_114", "category": "螺", "name": "黑金剛螺", "stockQty": 200, "size": "XL", "regularPrice": 9.0, "discountThreshold": 100, "discountPrice": 8.0, "note": ""}, {"id": "item_115", "category": "螺", "name": "巧克力螺", "stockQty": 200, "size": "L", "regularPrice": 9.0, "discountThreshold": 100, "discountPrice": 8.0, "note": ""}, {"id": "item_116", "category": "螺", "name": "皇冠斑馬螺", "stockQty": 200, "size": "L", "regularPrice": 9.0, "discountThreshold": 100, "discountPrice": 8.0, "note": ""}, {"id": "item_117", "category": "鰍，爬岩鰍，條鰍，吸鰍", "name": "三間鼠(野)", "stockQty": 200, "size": "3-3.5cm", "regularPrice": 70.0, "discountThreshold": 50, "discountPrice": 65.0, "note": ""}, {"id": "item_118", "category": "鰍，爬岩鰍，條鰍，吸鰍", "name": "熊貓小精靈(進口人工)", "stockQty": 200, "size": "2-2.5cm", "regularPrice": 30.0, "discountThreshold": 100, "discountPrice": 25.0, "note": ""}, {"id": "item_119", "category": "鰍，爬岩鰍，條鰍，吸鰍", "name": "短肛思凡腹吸鰍(野)", "stockQty": 200, "size": "3.5-4.5cm", "regularPrice": 110.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_120", "category": "鰍，爬岩鰍，條鰍，吸鰍", "name": "多鱗爬岩鰍(野)", "stockQty": 200, "size": "3.5-4.5cm", "regularPrice": 90.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_121", "category": "鰍，爬岩鰍，條鰍，吸鰍", "name": "越南金邊提琴鼠(野)", "stockQty": 200, "size": "3.5-4.5cm", "regularPrice": 55.0, "discountThreshold": 100, "discountPrice": 50.0, "note": ""}, {"id": "item_122", "category": "鰍，爬岩鰍，條鰍，吸鰍", "name": "蛇魚(野)", "stockQty": 200, "size": "4-5cm", "regularPrice": 8.0, "discountThreshold": 100, "discountPrice": 7.0, "note": ""}, {"id": "item_123", "category": "異型", "name": "白子白珍珠劍尾(進口人工)", "stockQty": 15, "size": "4-5cm", "regularPrice": 450.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_124", "category": "異型", "name": "L046熊貓異形(人工)", "stockQty": 15, "size": "3cm", "regularPrice": 1200.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_125", "category": "異型", "name": "大帆藍眼鬍子(人工)", "stockQty": 15, "size": "8-10cm", "regularPrice": 200.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_126", "category": "異型", "name": "藍眼鬍子(人工)", "stockQty": 15, "size": "5-6cm", "regularPrice": 45.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_127", "category": "異型", "name": "藍眼鬍子(人工)", "stockQty": 15, "size": "4-5cm", "regularPrice": 30.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_128", "category": "異型", "name": "藍眼鬍子(人工)", "stockQty": 15, "size": "3.5-4cm", "regularPrice": 25.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_129", "category": "異型", "name": "L027C亞拉圭亞金線皇冠豹(野，Araguaia)", "stockQty": 15, "size": "16-18cm", "regularPrice": 4500.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_130", "category": "異型", "name": "L027B申谷白金皇冠豹(野)", "stockQty": 15, "size": "8-10cm", "regularPrice": 1050.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_131", "category": "異型", "name": "L027B申谷白金皇冠豹(野)", "stockQty": 15, "size": "6-8cm", "regularPrice": 950.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_132", "category": "異型", "name": "L027D雷神皇冠豹(野)", "stockQty": 15, "size": "6-8cm", "regularPrice": 850.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_133", "category": "異型", "name": "L134黃金斑馬(野)", "stockQty": 15, "size": "6-8cm", "regularPrice": 800.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_134", "category": "異型", "name": "L037蛇皮異形(野)", "stockQty": 15, "size": "7-9cm", "regularPrice": 800.0, "discountThreshold": null, "discountPrice": null, "note": ""}, {"id": "item_135", "category": "異型", "name": "L020皇冠達摩(野)", "stockQty": 15, "size": "6-8cm", "regularPrice": 750.0, "discountThreshold": null, "discountPrice": null, "note": ""}];
+
+    const REGIONS = ['北部', '中部', '南部'];
+
+    const INITIAL_STORES = [
+      '北部 魚中魚-汐止店',
+      '中部 水世界',
+      '南部 永信',
+      '南部 北高雄-明誠二店',
+      '南部 草影',
+      '南部 魚中魚-巨蛋店',
+      '南部 魚中魚-楠梓店'
+    ];
+
+    const STORAGE_KEY = 'haixiao_fish_wholesale_v7';
+
+    function buildGroupedStoreOptionsHtml(stores, selectedStore, extraSuffixFn = null) {
+      const grouped = { '北部': [], '中部': [], '南部': [], '其他': [] };
+      stores.forEach(s => {
+        const reg = REGIONS.find(r => s.startsWith(r + ' '));
+        if (reg) grouped[reg].push(s);
+        else grouped['其他'].push(s);
+      });
+      return ['北部', '中部', '南部', '其他']
+        .filter(r => grouped[r].length > 0)
+        .map(r => `<optgroup label="${r}">` + grouped[r].map(s => {
+          const suffix = extraSuffixFn ? extraSuffixFn(s) : '';
+          return `<option value="${s}" ${s === selectedStore ? 'selected' : ''}>${s}${suffix}</option>`;
+        }).join('') + `</optgroup>`)
+        .join('');
+    }
+
+    function formatDateLocal(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatTimeLocal(d) {
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+      return `${hh}:${mm}:${ss}`;
+    }
+
+    function getTodayDateStr() {
+      return formatDateLocal(new Date());
+    }
+
+    function getNextMondayDateStr() {
+      const d = new Date();
+      const day = d.getDay();
+      const daysUntilNextMon = ((8 - day) % 7) || 7;
+      d.setDate(d.getDate() + daysUntilNextMon);
+      return formatDateLocal(d);
+    }
+
+    // 計算該出貨日期之後的「星期三」日期（例如週一出貨 -> 該週週三移至歷史）
+    function getArchiveWednesdayStr(shipDateStr) {
+      const parts = (shipDateStr || getNextMondayDateStr()).split('-').map(Number);
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
+      const day = d.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed...
+      const diff = ((3 - day + 7) % 7) || 7;
+      d.setDate(d.getDate() + diff);
+      return formatDateLocal(d);
+    }
+
+    const DEFAULT_STICKER_CONFIG = {
+      layoutMode: 'grid', // 'grid' | 'single' | 'strip'
+      cols: 3,
+      widthMm: 60,
+      heightMm: 38,
+      padXMm: 0,          // 底紙左右留邊 (每側)
+      padYMm: 0,          // 底紙上下留邊 (每側)
+      gapXMm: 5,
+      gapYMm: 5,
+      fontScale: 'md',
+      useDriverPaper: false
+    };
+
+    let state = {
+      activeTab: 'inventory',
+      invFilterCategory: '全部',
+      invSearch: '',
+      orderSummaryCollapsed: false,
+      inventory: [],
+      stores: [],
+      currentOrderStore: '南部 魚中魚-楠梓店',
+      orders: {},
+      orderMeta: {},
+      orderPrinted: {},
+      shipments: {},
+      shipDeducted: {},
+      shipConfirmedAt: {},
+      shipmentHistory: [],
+      currentShipStore: '南部 魚中魚-楠梓店',
+      mortalityLogs: [],
+      mortFilterDate: '',
+      stickerConfig: { ...DEFAULT_STICKER_CONFIG }
+    };
+
+    let stickerBagsMap = {};
+    let expandedOrderStores = {};
+
+    function ensureStoreMeta(store) {
+      if (!state.orderMeta[store]) {
+        state.orderMeta[store] = {
+          orderDate: getTodayDateStr(),
+          shipDate: getNextMondayDateStr()
+        };
+      }
+      return state.orderMeta[store];
+    }
+
+    function createDefaultData() {
+      const inv = JSON.parse(JSON.stringify(INITIAL_INVENTORY));
+      const findExact = (exactName) => inv.find(i => i.name === exactName) || inv.find(i => i.name.includes(exactName));
+      const buildOrderRows = (prefix, specs) => specs.map((sp, i) => {
+        const it = findExact(sp.name);
+        if (!it) return null;
+        return {
+          id: `${prefix}_${i}`,
+          itemId: it.id,
+          name: it.name,
+          category: it.category,
+          size: it.size,
+          regularPrice: it.regularPrice,
+          discountThreshold: it.discountThreshold,
+          discountPrice: it.discountPrice,
+          orderQty: sp.qty
+        };
+      }).filter(Boolean);
+
+      const today = getTodayDateStr();
+      const nextMon = getNextMondayDateStr();
+
+      const orders = {
+        '北部 魚中魚-汐止店': buildOrderRows('ord_xz', [
+          { name: '紅鼻剪刀(進口人工)', qty: 40 },
+          { name: '紅蓮燈(進口人工)', qty: 100 },
+          { name: '精靈鼠(進口人工)', qty: 30 },
+          { name: '斑節鱂(進口人工)', qty: 30 },
+          { name: '赤焰綠翡翠(進口人工)', qty: 40 },
+          { name: '瓜波鼠(野)', qty: 2 },
+          { name: '短吻金翅帝王鼠(野)', qty: 2 },
+          { name: '白子白珍珠劍尾(進口人工)', qty: 3 }
+        ]),
+        '中部 水世界': buildOrderRows('ord_ssj', [
+          { name: '白子紅鼻剪刀(進口人工，最後)', qty: 30 },
+          { name: '白子帝王燈(進口人工)', qty: 20 },
+          { name: '赤焰綠翡翠(進口人工)', qty: 20 },
+          { name: '多鱗爬岩鰍(野)', qty: 5 },
+          { name: '紅肚鉛筆燈(進口人工)', qty: 50 },
+          { name: '金沙蝦', qty: 20 },
+          { name: '皇冠斑馬螺', qty: 50 }
+        ]),
+        '南部 魚中魚-楠梓店': buildOrderRows('ord_nz', [
+          { name: '黑王蛇', qty: 2 },
+          { name: '三間鼠(野)', qty: 50 },
+          { name: '羅伯斯鼠(野)', qty: 3 },
+          { name: '日光燈(進口人工)', qty: 100 },
+          { name: '紅蓮燈(進口人工)', qty: 300 },
+          { name: '精靈鼠(進口人工)', qty: 100 },
+          { name: '黑金剛螺', qty: 100 },
+          { name: '巧克力螺', qty: 60 }
+        ])
+      };
+
+      const orderMeta = {};
+      Object.keys(orders).forEach(s => {
+        orderMeta[s] = { orderDate: today, shipDate: nextMon };
+      });
+
+      return {
+        inventory: inv,
+        stores: [...INITIAL_STORES],
+        currentOrderStore: '南部 魚中魚-楠梓店',
+        orders,
+        orderMeta,
+        orderPrinted: {},
+        shipments: {},
+        shipDeducted: {},
+        shipConfirmedAt: {},
+        shipmentHistory: [
+          {
+            id: 'SH-20261123-001',
+            store: '南部 魚中魚-楠梓店',
+            orderDate: '2026-11-21',
+            shipDate: '2026-11-23',
+            confirmedAt: '2026-11-23 09:35:00',
+            archivedAt: '2026-11-25 00:05:00',
+            items: [
+              { name: '紅蓮燈(進口人工)', size: '1.2-1.5cm', orderQty: 500, actualQty: 480, lockedUnitPrice: 3.8, discountApplied: true, note: '少20隻，維持優惠價' },
+              { name: '精靈鼠(進口人工)', size: '0.8-1.2cm', orderQty: 100, actualQty: 100, lockedUnitPrice: 11, discountApplied: true, note: '' }
+            ],
+            totalOrdered: 600,
+            totalActual: 580,
+            totalAmount: 2924
+          }
+        ],
+        currentShipStore: '南部 魚中魚-楠梓店',
+        mortalityLogs: [],
+        mortFilterDate: today,
+        stickerConfig: { ...DEFAULT_STICKER_CONFIG }
+      };
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.inventory) && parsed.inventory.length > 0) {
+            state = {
+              ...state,
+              ...parsed,
+              orderMeta: parsed.orderMeta || {},
+              orderPrinted: parsed.orderPrinted || {},
+              shipDeducted: parsed.shipDeducted || {},
+              shipConfirmedAt: parsed.shipConfirmedAt || {},
+              shipmentHistory: Array.isArray(parsed.shipmentHistory) ? parsed.shipmentHistory : [],
+              mortalityLogs: Array.isArray(parsed.mortalityLogs) ? parsed.mortalityLogs : [],
+              mortFilterDate: parsed.mortFilterDate !== undefined ? parsed.mortFilterDate : getTodayDateStr(),
+              stickerConfig: { ...DEFAULT_STICKER_CONFIG, ...(parsed.stickerConfig || {}) }
+            };
+            return;
+          }
+        }
+      } catch (e) {}
+      const def = createDefaultData();
+      state = { ...state, ...def };
+      saveState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          inventory: state.inventory,
+          stores: state.stores,
+          currentOrderStore: state.currentOrderStore,
+          orders: state.orders,
+          orderMeta: state.orderMeta,
+          orderPrinted: state.orderPrinted,
+          shipments: state.shipments,
+          shipDeducted: state.shipDeducted,
+          shipConfirmedAt: state.shipConfirmedAt,
+          shipmentHistory: state.shipmentHistory,
+          currentShipStore: state.currentShipStore,
+          mortalityLogs: state.mortalityLogs,
+          mortFilterDate: state.mortFilterDate,
+          orderSummaryCollapsed: state.orderSummaryCollapsed,
+          stickerConfig: state.stickerConfig
+        }));
+      } catch (e) {}
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      const icon = document.getElementById('toastIcon');
+      const text = document.getElementById('toastText');
+      text.textContent = msg;
+
+      t.classList.remove('bg-emerald-700', 'border-emerald-500', 'bg-amber-600', 'border-amber-400', 'bg-slate-800', 'border-slate-600');
+      if (type === 'warn') {
+        t.classList.add('bg-amber-600', 'border-amber-400');
+        icon.textContent = '⚠';
+      } else if (type === 'info') {
+        t.classList.add('bg-slate-800', 'border-slate-600');
+        icon.textContent = 'ℹ';
+      } else {
+        t.classList.add('bg-emerald-700', 'border-emerald-500');
+        icon.textContent = '✓';
+      }
+
+      t.classList.remove('opacity-0', 'translate-y-2');
+      t.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        t.classList.remove('opacity-100', 'translate-y-0');
+        t.classList.add('opacity-0', 'translate-y-2');
+      }, 3200);
+    }
+
+    function flashButton(btn, tempLabel, duration = 2200) {
+      if (!btn) return;
+      if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
+      clearTimeout(btn._flashTimer);
+      btn.innerHTML = `<span>✓ ${tempLabel}</span>`;
+      btn.classList.add('ring-2', 'ring-offset-1', 'ring-emerald-400');
+      btn._flashTimer = setTimeout(() => {
+        btn.innerHTML = btn.dataset.origHtml;
+        btn.classList.remove('ring-2', 'ring-offset-1', 'ring-emerald-400');
+        lucide.createIcons();
+      }, duration);
+    }
+
+    function openConfirm(title, message, onOk) {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const okBtn = document.getElementById('btnConfirmOk');
+      const cancelBtn = document.getElementById('btnConfirmCancel');
+      const cleanup = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        okBtn.onclick = null;
+        cancelBtn.onclick = null;
+      };
+      cancelBtn.onclick = cleanup;
+      okBtn.onclick = () => { cleanup(); onOk(); };
+    }
+
+    function formatMoney(n) {
+      const num = Number(n) || 0;
+      return '$' + (Number.isInteger(num) ? num.toLocaleString('zh-TW') : num.toFixed(1));
+    }
+
+    function getOrderUnitPrice(item, qty) {
+      if (item.discountThreshold && item.discountPrice != null && qty >= item.discountThreshold) {
+        return { unitPrice: item.discountPrice, isDiscount: true };
+      }
+      return { unitPrice: item.regularPrice, isDiscount: false };
+    }
+
+    function isStorePastShipDate(store) {
+      const meta = state.orderMeta[store];
+      const shipDate = (meta && meta.shipDate) ? meta.shipDate : getNextMondayDateStr();
+      return getTodayDateStr() > shipDate;
+    }
+
+    function updateNavBadges() {
+      let unprintedOrderStores = 0;
+      let pendingShipStores = 0;
+
+      Object.keys(state.orders || {}).forEach(store => {
+        const list = state.orders[store] || [];
+        if (list.length === 0) return;
+        // 超過出貨日期則自動歸零（不計入提醒數字）
+        if (isStorePastShipDate(store)) return;
+
+        // 訂購單數字：有訂購且尚未列印貼紙的店家數
+        if (!state.orderPrinted[store]) {
+          unprintedOrderStores += 1;
+        }
+
+        // 出貨單數字：有訂購且尚未確認出貨扣庫存的店家數
+        const deductedObj = state.shipDeducted[store];
+        const isProcessed = deductedObj && Object.values(deductedObj).some(v => v > 0);
+        if (!isProcessed) {
+          pendingShipStores += 1;
+        }
+      });
+
+      const ordBadge = document.getElementById('navOrderBadge');
+      if (unprintedOrderStores > 0) {
+        ordBadge.textContent = unprintedOrderStores;
+        ordBadge.classList.remove('hidden');
+      } else {
+        ordBadge.classList.add('hidden');
+      }
+
+      const shipBadge = document.getElementById('navShipBadge');
+      if (shipBadge) {
+        if (pendingShipStores > 0) {
+          shipBadge.textContent = pendingShipStores;
+          shipBadge.classList.remove('hidden');
+        } else {
+          shipBadge.classList.add('hidden');
+        }
+      }
+
+      const today = getTodayDateStr();
+      const todayMortCount = state.mortalityLogs.filter(m => m.date === today).length;
+      const mortBadge = document.getElementById('navMortBadge');
+      if (todayMortCount > 0) {
+        mortBadge.textContent = todayMortCount;
+        mortBadge.classList.remove('hidden');
+      } else {
+        mortBadge.classList.add('hidden');
+      }
+    }
+
+    // ==================== REUSABLE QUICK FISH SEARCH HELPER ====================
+    function setupQuickItemSearch({ inputId, clearBtnId, resultsId, onSelect }) {
+      const inp = document.getElementById(inputId);
+      const clearBtn = document.getElementById(clearBtnId);
+      const resBox = document.getElementById(resultsId);
+
+      function renderResults() {
+        const q = inp.value.trim().toLowerCase();
+        clearBtn.classList.toggle('hidden', !q);
+        if (!q) {
+          resBox.classList.add('hidden');
+          resBox.innerHTML = '';
+          return;
+        }
+        const matches = state.inventory.filter(i =>
+          i.name.toLowerCase().includes(q) ||
+          (i.category && i.category.toLowerCase().includes(q)) ||
+          (i.size && i.size.toLowerCase().includes(q))
+        ).slice(0, 25);
+
+        if (matches.length === 0) {
+          resBox.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">找不到包含「${inp.value.trim()}」的魚種或爬蟲</div>`;
+        } else {
+          resBox.innerHTML = matches.map(m => `
+            <button type="button" data-pick-id="${m.id}" class="w-full text-left px-3 py-2.5 hover:bg-teal-50 active:bg-teal-100 flex items-center justify-between gap-2 transition">
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-slate-800 truncate">${m.name}</div>
+                <div class="text-[11px] text-slate-500">${m.category} ｜ 尺寸 ${m.size || '-'} ｜ 庫存 ${m.stockQty}</div>
+              </div>
+              <span class="text-xs font-bold text-teal-700 shrink-0">${formatMoney(m.regularPrice)}</span>
+            </button>
+          `).join('');
+          resBox.querySelectorAll('[data-pick-id]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const picked = state.inventory.find(i => i.id === btn.dataset.pickId);
+              if (!picked) return;
+              inp.value = '';
+              clearBtn.classList.add('hidden');
+              resBox.classList.add('hidden');
+              onSelect(picked);
+            });
+          });
+        }
+        resBox.classList.remove('hidden');
+      }
+
+      inp.addEventListener('input', renderResults);
+      inp.addEventListener('focus', () => { if (inp.value.trim()) renderResults(); });
+      clearBtn.addEventListener('click', () => {
+        inp.value = '';
+        clearBtn.classList.add('hidden');
+        resBox.classList.add('hidden');
+        inp.focus();
+      });
+      document.addEventListener('click', e => {
+        if (!inp.contains(e.target) && !resBox.contains(e.target) && !clearBtn.contains(e.target)) {
+          resBox.classList.add('hidden');
+        }
+      });
+    }
+
+    // ==================== TAB NAVIGATION ====================
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+      ['inventory', 'order', 'shipping', 'mortality', 'history'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tabName);
+      });
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const active = btn.dataset.tab === tabName;
+        const isMort = btn.dataset.tab === 'mortality';
+        btn.classList.remove('text-teal-700', 'border-teal-700', 'text-rose-600', 'border-rose-600', 'text-slate-500', 'border-transparent', 'font-bold', 'font-medium');
+        if (active) {
+          btn.classList.add('font-bold', isMort ? 'text-rose-600' : 'text-teal-700', isMort ? 'border-rose-600' : 'border-teal-700');
+        } else {
+          btn.classList.add('text-slate-500', 'font-medium', 'border-transparent');
+        }
+      });
+      if (tabName === 'inventory') renderInventory();
+      if (tabName === 'order') renderOrderTab();
+      if (tabName === 'shipping') renderShippingTab();
+      if (tabName === 'mortality') renderMortalityTab();
+      if (tabName === 'history') renderHistoryTab();
+      updateNavBadges();
+      lucide.createIcons();
+    }
+
+    // ==================== TAB 1: INVENTORY ====================
+    function getUniqueCategories() {
+      const cats = [];
+      state.inventory.forEach(i => {
+        if (i.category && !cats.includes(i.category)) cats.push(i.category);
+      });
+      return cats;
+    }
+
+    function renderInventory() {
+      const uniqueCats = getUniqueCategories();
+      const cats = ['全部', ...uniqueCats];
+      document.getElementById('invCatTotalBadge').textContent = `共 ${uniqueCats.length} 類`;
+
+      const pillsEl = document.getElementById('invCategoryPills');
+      pillsEl.innerHTML = cats.map(c => {
+        const active = state.invFilterCategory === c;
+        const count = c === '全部' ? state.inventory.length : state.inventory.filter(i => i.category === c).length;
+        return `<button data-cat="${c}" class="inv-cat-pill px-2.5 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1 ${active ? 'bg-teal-700 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}"><span>${c}</span><span class="text-[10px] ${active ? 'text-teal-200' : 'text-slate-400'}">(${count})</span></button>`;
+      }).join('');
+
+      pillsEl.querySelectorAll('.inv-cat-pill').forEach(b => {
+        b.addEventListener('click', () => {
+          state.invFilterCategory = b.dataset.cat;
+          renderInventory();
+        });
+      });
+
+      const q = state.invSearch.trim().toLowerCase();
+      const filtered = state.inventory.filter(item => {
+        const matchCat = state.invFilterCategory === '全部' || item.category === state.invFilterCategory;
+        const matchSearch = !q ||
+          item.name.toLowerCase().includes(q) ||
+          item.category.toLowerCase().includes(q) ||
+          (item.size && item.size.toLowerCase().includes(q)) ||
+          (item.note && item.note.toLowerCase().includes(q));
+        return matchCat && matchSearch;
+      });
+
+      document.getElementById('invCountLabel').textContent = `顯示 ${filtered.length} / ${state.inventory.length} 項存貨`;
+
+      const listEl = document.getElementById('invList');
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-slate-400 text-sm border border-slate-200">找不到符合條件的品項</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => `
+        <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 flex flex-col gap-2">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <span class="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 mb-1">${item.category}</span>
+              <h3 class="font-bold text-slate-800 text-sm leading-snug break-words">${item.name}</h3>
+            </div>
+            <button data-edit-id="${item.id}" class="btn-edit-inv p-2 text-slate-400 hover:text-teal-700 hover:bg-teal-50 rounded-xl shrink-0">
+              <i data-lucide="pencil" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs pt-1 border-t border-slate-100">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">尺寸: ${item.size || '-'}</span>
+              <span class="text-slate-700 font-semibold">一般價 ${formatMoney(item.regularPrice)}</span>
+              ${item.discountThreshold && item.discountPrice != null ? `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-medium">${item.discountThreshold}隻以上 ${formatMoney(item.discountPrice)}</span>` : ''}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-slate-500">庫存</span>
+              <span class="font-bold text-sm ${item.stockQty > 0 ? 'text-teal-700' : 'text-rose-600'}">${item.stockQty}</span>
+            </div>
+          </div>
+          ${item.note ? `<div class="text-[11px] text-amber-700 bg-amber-50/70 px-2.5 py-1 rounded-lg">${item.note}</div>` : ''}
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('.btn-edit-inv').forEach(btn => {
+        btn.addEventListener('click', () => openInvModal(btn.dataset.editId));
+      });
+      lucide.createIcons();
+    }
+
+    function openInvModal(itemId = null) {
+      const modal = document.getElementById('invModal');
+      const dl = document.getElementById('categoryDatalist');
+      dl.innerHTML = getUniqueCategories().map(c => `<option value="${c}">`).join('');
+
+      const delBtn = document.getElementById('btnDeleteInvItem');
+      if (itemId) {
+        const item = state.inventory.find(i => i.id === itemId);
+        if (!item) return;
+        document.getElementById('invModalTitle').textContent = '編輯存貨品項';
+        document.getElementById('editInvId').value = item.id;
+        document.getElementById('editInvCategory').value = item.category;
+        document.getElementById('editInvName').value = item.name;
+        document.getElementById('editInvStock').value = item.stockQty;
+        document.getElementById('editInvSize').value = item.size;
+        document.getElementById('editInvRegPrice').value = item.regularPrice;
+        document.getElementById('editInvDiscQty').value = item.discountThreshold || '';
+        document.getElementById('editInvDiscPrice').value = item.discountPrice != null ? item.discountPrice : '';
+        document.getElementById('editInvNote').value = item.note || '';
+        delBtn.classList.remove('hidden');
+      } else {
+        document.getElementById('invModalTitle').textContent = '新增存貨品項';
+        document.getElementById('editInvId').value = '';
+        document.getElementById('editInvCategory').value = state.invFilterCategory !== '全部' ? state.invFilterCategory : '';
+        document.getElementById('editInvName').value = '';
+        document.getElementById('editInvStock').value = 50;
+        document.getElementById('editInvSize').value = '';
+        document.getElementById('editInvRegPrice').value = '';
+        document.getElementById('editInvDiscQty').value = '';
+        document.getElementById('editInvDiscPrice').value = '';
+        document.getElementById('editInvNote').value = '';
+        delBtn.classList.add('hidden');
+      }
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeInvModal() {
+      const modal = document.getElementById('invModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // ==================== TAB 2: ORDER ====================
+    function commitPendingNewStore(showNotification = false) {
+      const inp = document.getElementById('ordNewStoreInput');
+      const regSel = document.getElementById('ordNewStoreRegion');
+      const rawName = inp.value.trim();
+      if (!rawName) return false;
+      const hasRegionPrefix = REGIONS.some(r => rawName.startsWith(r + ' '));
+      const fullName = hasRegionPrefix ? rawName : `${regSel ? regSel.value : '南部'} ${rawName}`;
+      if (!state.stores.includes(fullName)) state.stores.push(fullName);
+      state.currentOrderStore = fullName;
+      ensureStoreMeta(fullName);
+      inp.value = '';
+      saveState();
+      if (showNotification) showToast(`已新增並切換至「${fullName}」`);
+      return true;
+    }
+
+    function renderOrderTab() {
+      const storeSel = document.getElementById('ordStoreSelect');
+      storeSel.innerHTML = buildGroupedStoreOptionsHtml(state.stores, state.currentOrderStore);
+
+      const meta = ensureStoreMeta(state.currentOrderStore);
+      document.getElementById('ordOrderDate').value = meta.orderDate;
+      document.getElementById('ordShipDate').value = meta.shipDate;
+
+      const cats = getUniqueCategories();
+      const catSel = document.getElementById('ordCategorySelect');
+      const prevCat = catSel.value;
+      catSel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+      if (prevCat && cats.includes(prevCat)) catSel.value = prevCat;
+
+      updateOrderItemDropdown();
+      renderOrderSummary();
+    }
+
+    function updateOrderItemDropdown(selectedItemId = null) {
+      const cat = document.getElementById('ordCategorySelect').value;
+      const matching = state.inventory.filter(i => i.category === cat);
+      const itemSel = document.getElementById('ordItemSelect');
+      itemSel.innerHTML = matching.map(i => `<option value="${i.id}">${i.name} (${i.size || '-'})</option>`).join('');
+      if (selectedItemId && matching.some(i => i.id === selectedItemId)) {
+        itemSel.value = selectedItemId;
+      }
+      updateOrderPreview();
+    }
+
+    function updateOrderPreview() {
+      const itemId = document.getElementById('ordItemSelect').value;
+      const item = state.inventory.find(i => i.id === itemId);
+      const previewEl = document.getElementById('ordItemPreview');
+      if (!item) {
+        previewEl.classList.add('hidden');
+        return;
+      }
+      previewEl.classList.remove('hidden');
+      document.getElementById('prevSize').textContent = item.size || '-';
+      document.getElementById('prevStock').textContent = item.stockQty;
+      document.getElementById('prevRegPrice').textContent = formatMoney(item.regularPrice);
+
+      const discWrap = document.getElementById('prevDiscWrap');
+      if (item.discountThreshold && item.discountPrice != null) {
+        discWrap.classList.remove('hidden');
+        document.getElementById('prevDiscRule').textContent = `${item.discountThreshold}隻以上 ${formatMoney(item.discountPrice)}`;
+      } else {
+        discWrap.classList.add('hidden');
+      }
+
+      const noteEl = document.getElementById('prevNote');
+      if (item.note) {
+        noteEl.textContent = '備註：' + item.note;
+        noteEl.classList.remove('hidden');
+      } else {
+        noteEl.classList.add('hidden');
+      }
+
+      const qty = Math.max(0, parseInt(document.getElementById('ordQtyInput').value, 10) || 0);
+      const { unitPrice, isDiscount } = getOrderUnitPrice(item, qty);
+      document.getElementById('ordCalcUnitLabel').innerHTML = isDiscount
+        ? `<span class="text-emerald-700 font-bold">優惠單價：${formatMoney(unitPrice)}</span>`
+        : `一般單價：${formatMoney(unitPrice)}`;
+      document.getElementById('ordCalcSubtotal').textContent = `小計 ${formatMoney(unitPrice * qty)}`;
+    }
+
+    function renderOrderSummary() {
+      document.getElementById('ordActiveStoreBadge').textContent = state.currentOrderStore;
+      updateNavBadges();
+      renderAllOrdersOverview();
+    }
+
+    function renderAllOrdersOverview() {
+      const container = document.getElementById('allOrdersList');
+      const countEl = document.getElementById('allOrdersCount');
+      if (!container || !countEl) return;
+
+      const activeStores = Object.keys(state.orders || {}).filter(s => (state.orders[s] || []).length > 0);
+      countEl.textContent = activeStores.length;
+
+      if (activeStores.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl">目前尚無任何店家成立訂購單，請從上方加入品項</div>`;
+        return;
+      }
+
+      container.innerHTML = activeStores.map(s => {
+        const rows = state.orders[s] || [];
+        const meta = ensureStoreMeta(s);
+        const isCurrent = s === state.currentOrderStore;
+        const isExpanded = !!expandedOrderStores[s];
+        const past = isStorePastShipDate(s);
+        const printed = !!state.orderPrinted[s];
+        const deductedObj = state.shipDeducted[s];
+        const shipped = deductedObj && Object.values(deductedObj).some(v => v > 0);
+
+        let qtySum = 0, amtSum = 0;
+        rows.forEach(r => {
+          const { unitPrice } = getOrderUnitPrice(r, r.orderQty);
+          qtySum += r.orderQty;
+          amtSum += unitPrice * r.orderQty;
+        });
+
+        const printTag = past
+          ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">已過出貨日</span>`
+          : (printed
+              ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">已列印貼紙</span>`
+              : `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-semibold">未列印貼紙</span>`);
+
+        const shipTag = shipped
+          ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">已扣庫存</span>`
+          : `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold">待出貨</span>`;
+
+        const itemsHtml = rows.map(row => {
+          const { unitPrice, isDiscount } = getOrderUnitPrice(row, row.orderQty);
+          const sub = unitPrice * row.orderQty;
+          return `
+            <div class="bg-white rounded-xl p-2.5 border border-slate-200 space-y-1.5">
+              <div class="flex justify-between items-start gap-2">
+                <div class="min-w-0">
+                  <div class="font-bold text-xs sm:text-sm text-slate-800">${row.name}</div>
+                  <div class="text-[11px] text-slate-500">尺寸: ${row.size || '-'} ｜ ${isDiscount ? `<span class="text-emerald-700 font-semibold">優惠價 ${formatMoney(unitPrice)}</span>` : `一般價 ${formatMoney(unitPrice)}`}</div>
+                </div>
+                <button type="button" data-ord-store="${s}" data-remove-ord="${row.id}" class="btn-remove-ord p-1 text-slate-400 hover:text-rose-600 rounded-lg shrink-0">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5">
+                  <button type="button" data-ord-store="${s}" data-ord-step="-1" data-ord-id="${row.id}" class="btn-ord-step w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-600">-</button>
+                  <input type="number" min="1" value="${row.orderQty}" data-ord-store="${s}" data-ord-qty-id="${row.id}" class="inp-ord-qty w-16 text-center py-0.5 bg-slate-50 border border-slate-200 rounded-lg font-bold text-xs" />
+                  <button type="button" data-ord-store="${s}" data-ord-step="1" data-ord-id="${row.id}" class="btn-ord-step w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 font-bold text-slate-600">+</button>
+                </div>
+                <div class="font-bold text-teal-800 text-xs sm:text-sm">${formatMoney(sub)}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        const minAlertHtml = (amtSum > 0 && amtSum < 5000)
+          ? `<div class="text-[11px] px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200">尚未達滿 $5,000 出貨門檻（還差 ${formatMoney(5000 - amtSum)}）</div>`
+          : '';
+
+        return `
+          <div class="rounded-2xl border overflow-hidden transition ${isCurrent ? 'bg-teal-50/40 border-teal-400 ring-1 ring-teal-200' : 'bg-slate-50/70 border-slate-200'}">
+            <!-- Header Row -->
+            <div class="p-3 space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="flex items-center flex-wrap gap-1.5">
+                    <span class="font-bold text-sm text-slate-800">${s}</span>
+                    ${isCurrent ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-700 text-white">目前選取</span>' : ''}
+                    ${printTag}
+                    ${shipTag}
+                  </div>
+                  <div class="text-[11px] text-slate-500 mt-0.5">
+                    訂購 ${meta.orderDate} ｜ 出貨 ${meta.shipDate} ｜ ${rows.length} 項 / ${qtySum.toLocaleString('zh-TW')} 隻
+                  </div>
+                </div>
+                <div class="font-extrabold text-teal-800 text-base shrink-0">${formatMoney(amtSum)}</div>
+              </div>
+
+              <!-- Quick Action Bar -->
+              <div class="flex flex-wrap gap-1.5 pt-1 border-t border-slate-200/70">
+                <button type="button" data-toggle-ord-store="${s}" class="btn-toggle-ord-store flex-1 py-1.5 bg-white hover:bg-teal-50 text-teal-800 border border-teal-200 rounded-lg text-xs font-semibold">
+                  ${isExpanded ? '收合明細 ▴' : '展開明細／編輯 ▾'}
+                </button>
+                <button type="button" data-print-order-store="${s}" class="btn-print-order-store px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold">列印貼紙</button>
+                <button type="button" data-ship-order-store="${s}" class="btn-ship-order-store px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold">去出貨</button>
+              </div>
+            </div>
+
+            <!-- Collapsible Inline Details -->
+            <div class="${isExpanded ? '' : 'hidden'} px-3 pb-3 pt-2 border-t border-slate-200/80 bg-slate-100/60 space-y-2">
+              ${itemsHtml}
+              ${minAlertHtml}
+              <div class="flex items-center justify-between pt-1.5 gap-2">
+                <button type="button" data-clear-ord-store="${s}" class="btn-clear-ord-store text-xs text-rose-600 hover:underline font-medium">清空此單</button>
+                <div class="flex gap-1.5">
+                  <button type="button" data-select-ord-store="${s}" class="btn-select-ord-store px-2.5 py-1.5 bg-white hover:bg-teal-50 text-teal-800 border border-teal-200 rounded-lg text-xs font-semibold">切換加點</button>
+                  <button type="button" data-copy-ord-store="${s}" class="btn-copy-ord-store px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold">複製明細</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Bind accordion toggle
+      container.querySelectorAll('.btn-toggle-ord-store').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const st = btn.dataset.toggleOrdStore;
+          expandedOrderStores[st] = !expandedOrderStores[st];
+          renderAllOrdersOverview();
+        });
+      });
+
+      // Bind switch active store for adding more items
+      container.querySelectorAll('.btn-select-ord-store').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.currentOrderStore = btn.dataset.selectOrdStore;
+          saveState();
+          renderOrderTab();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showToast(`已切換上方輸入店家為「${state.currentOrderStore}」`, 'info');
+        });
+      });
+
+      // Bind inline remove / qty step / qty input
+      container.querySelectorAll('.btn-remove-ord').forEach(b => {
+        b.addEventListener('click', () => {
+          const st = b.dataset.ordStore;
+          state.orders[st] = (state.orders[st] || []).filter(r => r.id !== b.dataset.removeOrd);
+          delete state.shipments[st];
+          state.orderPrinted[st] = false;
+          saveState();
+          renderOrderSummary();
+          showToast('已移除訂購品項', 'info');
+        });
+      });
+      container.querySelectorAll('.btn-ord-step').forEach(b => {
+        b.addEventListener('click', () => {
+          const st = b.dataset.ordStore;
+          const target = (state.orders[st] || []).find(r => r.id === b.dataset.ordId);
+          if (!target) return;
+          target.orderQty = Math.max(1, target.orderQty + parseInt(b.dataset.ordStep, 10));
+          delete state.shipments[st];
+          state.orderPrinted[st] = false;
+          saveState();
+          renderOrderSummary();
+        });
+      });
+      container.querySelectorAll('.inp-ord-qty').forEach(inp => {
+        inp.addEventListener('change', () => {
+          const st = inp.dataset.ordStore;
+          const target = (state.orders[st] || []).find(r => r.id === inp.dataset.ordQtyId);
+          if (!target) return;
+          target.orderQty = Math.max(1, parseInt(inp.value, 10) || 1);
+          delete state.shipments[st];
+          state.orderPrinted[st] = false;
+          saveState();
+          renderOrderSummary();
+        });
+      });
+
+      // Bind clear / copy / print / go-to-shipping per store
+      container.querySelectorAll('.btn-clear-ord-store').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const st = btn.dataset.clearOrdStore;
+          openConfirm('清空訂購單', `確定要清空「${st}」的訂購清單嗎？`, () => {
+            state.orders[st] = [];
+            delete state.shipments[st];
+            delete state.orderPrinted[st];
+            delete expandedOrderStores[st];
+            saveState();
+            renderOrderSummary();
+            showToast(`已清空「${st}」訂購清單`, 'info');
+          });
+        });
+      });
+      container.querySelectorAll('.btn-copy-ord-store').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const st = btn.dataset.copyOrdStore;
+          const meta = ensureStoreMeta(st);
+          const list = state.orders[st] || [];
+          if (list.length === 0) return;
+          let totalQty = 0, totalAmt = 0;
+          const lines = [
+            `【訂購單】店家：${st}`,
+            `訂購日期：${meta.orderDate} ｜ 出貨日期：${meta.shipDate}`,
+            '----------------'
+          ];
+          list.forEach((r, idx) => {
+            const { unitPrice, isDiscount } = getOrderUnitPrice(r, r.orderQty);
+            const sub = unitPrice * r.orderQty;
+            totalQty += r.orderQty;
+            totalAmt += sub;
+            lines.push(`${idx + 1}. ${r.name} (${r.size}) x${r.orderQty} @${unitPrice}${isDiscount ? '(優惠)' : ''} = ${formatMoney(sub)}`);
+          });
+          lines.push('----------------');
+          lines.push(`總數量：${totalQty} ｜ 總金額：${formatMoney(totalAmt)}`);
+          copyTextToClipboard(lines.join('\n'), e.currentTarget, '已複製');
+        });
+      });
+      container.querySelectorAll('.btn-print-order-store').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.currentOrderStore = btn.dataset.printOrderStore;
+          saveState();
+          renderOrderTab();
+          openStickerModal();
+        });
+      });
+      container.querySelectorAll('.btn-ship-order-store').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.currentShipStore = btn.dataset.shipOrderStore;
+          saveState();
+          switchTab('shipping');
+          showToast(`已載入「${state.currentShipStore}」出貨單`, 'info');
+        });
+      });
+      lucide.createIcons();
+    }
+
+    // ==================== STICKER PRINTING (WITH BACKING MARGINS & STRIP MODE) ====================
+    function syncStickerConfigToInputs() {
+      const cfg = state.stickerConfig;
+      document.getElementById('stLayoutMode').value = cfg.layoutMode;
+      document.getElementById('stCols').value = cfg.cols;
+      document.getElementById('stWidth').value = cfg.widthMm;
+      document.getElementById('stHeight').value = cfg.heightMm;
+      document.getElementById('stPadX').value = cfg.padXMm;
+      document.getElementById('stPadY').value = cfg.padYMm;
+      document.getElementById('stGapX').value = cfg.gapXMm;
+      document.getElementById('stGapY').value = cfg.gapYMm;
+      document.getElementById('stFontScale').value = cfg.fontScale;
+      document.getElementById('stUseDriverPaper').checked = !!cfg.useDriverPaper;
+
+      applyStickerFieldVisibility();
+      updateBackingHint();
+    }
+
+    function applyStickerFieldVisibility() {
+      const mode = state.stickerConfig.layoutMode;
+      const isGrid = mode === 'grid';
+      const isStrip = mode === 'strip';
+
+      document.getElementById('stColsWrap').classList.toggle('hidden', !isGrid);
+      document.getElementById('stGapXWrap').classList.toggle('hidden', !isGrid);
+      document.getElementById('stGapYWrap').classList.toggle('hidden', mode === 'single');
+      document.getElementById('stGapYLabel').textContent = isStrip
+        ? '剪裁間距 (mm，不留白填0)'
+        : '貼紙垂直間距 (mm)';
+    }
+
+    function updateBackingHint() {
+      const cfg = state.stickerConfig;
+      const totalW = +(cfg.widthMm + cfg.padXMm * 2).toFixed(1);
+      const totalH = +(cfg.heightMm + cfg.padYMm * 2).toFixed(1);
+      const hintEl = document.getElementById('stBackingCalcHint');
+      if (cfg.layoutMode === 'strip') {
+        hintEl.textContent = `長條捲紙模式：單張貼紙 ${cfg.widthMm}×${cfg.heightMm}mm，含留邊寬 ${totalW}mm × 高 ${totalH}mm（連續出紙不強制分頁）。`;
+      } else if (cfg.layoutMode === 'single') {
+        hintEl.textContent = `捲紙單張模式：單張含底紙留邊為 ${totalW}mm × ${totalH}mm（例：底紙高10、貼紙高8，填貼紙高8、上下留邊1）。`;
+      } else {
+        hintEl.textContent = `A4／多格模式：單格含留邊 ${totalW}×${totalH}mm，每列 ${cfg.cols} 欄，水平/垂直間距 ${cfg.gapXMm}/${cfg.gapYMm}mm。`;
+      }
+    }
+
+    function readStickerConfigFromInputs() {
+      state.stickerConfig = {
+        layoutMode: document.getElementById('stLayoutMode').value,
+        cols: Math.min(6, Math.max(1, parseInt(document.getElementById('stCols').value, 10) || 3)),
+        widthMm: Math.min(210, Math.max(10, parseFloat(document.getElementById('stWidth').value) || 60)),
+        heightMm: Math.min(150, Math.max(8, parseFloat(document.getElementById('stHeight').value) || 38)),
+        padXMm: Math.min(20, Math.max(0, parseFloat(document.getElementById('stPadX').value) || 0)),
+        padYMm: Math.min(20, Math.max(0, parseFloat(document.getElementById('stPadY').value) || 0)),
+        gapXMm: Math.min(30, Math.max(0, parseFloat(document.getElementById('stGapX').value) || 0)),
+        gapYMm: Math.min(30, Math.max(0, parseFloat(document.getElementById('stGapY').value) || 0)),
+        fontScale: document.getElementById('stFontScale').value,
+        useDriverPaper: document.getElementById('stUseDriverPaper').checked
+      };
+      applyStickerFieldVisibility();
+      updateBackingHint();
+      saveState();
+    }
+
+    // 列印貼紙時自動去除括號內的補充字眼（如 進口人工、野、含CITES 等），只留純魚種／爬蟲名稱
+    function getStickerFishName(rawName) {
+      if (!rawName) return '';
+      return String(rawName)
+        .replace(/[\(（][^\)\）]*[\)）]?/g, '')
+        .trim() || String(rawName).trim();
+    }
+
+    function buildStickersList(store, orderList) {
+      const meta = ensureStoreMeta(store);
+      const stickers = [];
+      orderList.forEach(row => {
+        const bags = Math.max(1, parseInt(stickerBagsMap[row.id], 10) || 1);
+        const baseQty = Math.floor(row.orderQty / bags);
+        const rem = row.orderQty % bags;
+        for (let b = 0; b < bags; b++) {
+          const bagQty = baseQty + (b < rem ? 1 : 0);
+          stickers.push({
+            store,
+            shipDate: meta.shipDate,
+            name: getStickerFishName(row.name),
+            size: row.size || '-',
+            qty: bagQty,
+            bagLabel: bags > 1 ? `${b + 1}/${bags}` : ''
+          });
+        }
+      });
+      return stickers;
+    }
+
+    function renderStickerModalContent() {
+      const store = state.currentOrderStore;
+      const list = state.orders[store] || [];
+      const cfg = state.stickerConfig;
+      const controlsEl = document.getElementById('stickerBagControls');
+
+      controlsEl.innerHTML = list.map(row => {
+        const bags = stickerBagsMap[row.id] || 1;
+        return `
+          <div class="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+            <div class="min-w-0">
+              <div class="font-bold text-slate-800 truncate">${row.name}</div>
+              <div class="text-slate-500">訂購 ${row.orderQty} 隻</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="text-slate-500">分裝</span>
+              <button data-bag-step="-1" data-bag-id="${row.id}" class="btn-bag-step w-7 h-7 bg-white border border-slate-200 rounded-lg font-bold text-slate-600">-</button>
+              <span class="w-7 text-center font-bold text-teal-800">${bags}包</span>
+              <button data-bag-step="1" data-bag-id="${row.id}" class="btn-bag-step w-7 h-7 bg-white border border-slate-200 rounded-lg font-bold text-slate-600">+</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      controlsEl.querySelectorAll('.btn-bag-step').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.bagId;
+          const step = parseInt(btn.dataset.bagStep, 10);
+          stickerBagsMap[id] = Math.max(1, (stickerBagsMap[id] || 1) + step);
+          renderStickerModalContent();
+        });
+      });
+
+      const stickers = buildStickersList(store, list);
+      document.getElementById('stickerTotalCount').textContent = stickers.length;
+
+      const previewEl = document.getElementById('stickerPreviewGrid');
+      const totalWmm = cfg.widthMm + cfg.padXMm * 2;
+      const totalHmm = cfg.heightMm + cfg.padYMm * 2;
+      const cols = cfg.layoutMode === 'grid' ? cfg.cols : 1;
+
+      // Compute proportional mm -> px scale so width/height/margin edits visibly resize the preview!
+      const availPx = Math.max(260, (previewEl.parentElement && previewEl.parentElement.clientWidth ? previewEl.parentElement.clientWidth - 8 : 380));
+      const baseScale = 3.2; // 1mm = 3.2px (e.g. 45mm=144px, 60mm=192px)
+      const totalRowMm = cols * totalWmm + (cols > 1 ? (cols - 1) * cfg.gapXMm : 0);
+      const scale = Math.min(baseScale, availPx / Math.max(totalRowMm, 1));
+
+      const cardWpx = Math.round(cfg.widthMm * scale);
+      const cardHpx = Math.round(cfg.heightMm * scale);
+      const padXpx = Math.round(cfg.padXMm * scale);
+      const padYpx = Math.round(cfg.padYMm * scale);
+      const gapXpx = cfg.layoutMode === 'grid' ? Math.round(cfg.gapXMm * scale) : 0;
+      const gapYpx = cfg.layoutMode === 'single' ? 10 : Math.round(cfg.gapYMm * scale);
+
+      previewEl.style.display = 'grid';
+      previewEl.style.gridTemplateColumns = `repeat(${cols}, max-content)`;
+      previewEl.style.justifyContent = 'start';
+      previewEl.style.columnGap = `${gapXpx}px`;
+      previewEl.style.rowGap = `${gapYpx}px`;
+      previewEl.style.overflowX = 'auto';
+
+      const fontTitle = cfg.fontScale === 'sm' ? 'text-[10px]' : (cfg.fontScale === 'lg' ? 'text-sm' : 'text-xs');
+      const fontQty = cfg.fontScale === 'sm' ? 'text-xs' : (cfg.fontScale === 'lg' ? 'text-lg' : 'text-sm');
+      const isNarrowStrip = cfg.heightMm <= 20;
+
+      previewEl.innerHTML = stickers.map(st => {
+        const innerContent = isNarrowStrip
+          ? `<div class="flex items-center justify-between gap-1.5 w-full h-full">
+               <span class="font-extrabold text-[10px] text-slate-900 shrink-0">${st.store}</span>
+               <span class="font-bold text-[10px] text-slate-800 truncate">${st.name}</span>
+               <span class="font-extrabold text-xs text-teal-800 shrink-0">${st.qty}隻</span>
+             </div>`
+          : `<div class="flex items-center justify-between border-b border-slate-200 pb-0.5 gap-1">
+               <span class="font-extrabold ${fontTitle} text-slate-900 truncate">${st.store}</span>
+               ${st.bagLabel ? `<span class="text-[9px] font-semibold bg-slate-100 px-1 py-0.5 rounded shrink-0">${st.bagLabel}</span>` : ''}
+             </div>
+             <div class="font-bold ${fontTitle} text-slate-800 leading-tight break-words">${st.name}</div>
+             <div class="flex items-baseline justify-end pt-0.5">
+               <span class="${fontQty} font-extrabold text-teal-800 shrink-0">${st.qty}<span class="text-[10px] font-normal ml-0.5">隻</span></span>
+             </div>`;
+
+        return `
+          <div class="border border-dashed border-amber-400 bg-amber-50/40 rounded-md box-content" style="padding:${padYpx}px ${padXpx}px;">
+            <div class="border-2 border-slate-800 rounded-md p-1.5 bg-white flex flex-col justify-between overflow-hidden box-border" style="width:${cardWpx}px;height:${cardHpx}px;">
+              ${innerContent}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openStickerModal() {
+      const store = state.currentOrderStore;
+      const list = state.orders[store] || [];
+      if (list.length === 0) {
+        showToast('訂購清單是空的，無法列印貼紙', 'warn');
+        return;
+      }
+      list.forEach(r => {
+        if (!stickerBagsMap[r.id]) stickerBagsMap[r.id] = 1;
+      });
+      document.getElementById('stickerBagControls').classList.add('hidden');
+      document.getElementById('bagToggleLabel').textContent = '展開 ▾';
+      syncStickerConfigToInputs();
+      renderStickerModalContent();
+      const modal = document.getElementById('stickerModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function executePrintStickers() {
+      readStickerConfigFromInputs();
+      const store = state.currentOrderStore;
+      const list = state.orders[store] || [];
+      const cfg = state.stickerConfig;
+      const stickers = buildStickersList(store, list);
+      const sheet = document.getElementById('printStickerSheet');
+      const dynStyle = document.getElementById('dynamicPrintPageStyle');
+
+      const totalW = +(cfg.widthMm + cfg.padXMm * 2).toFixed(1);
+      const totalH = +(cfg.heightMm + cfg.padYMm * 2).toFixed(1);
+
+      // Apply @page size only when user hasn't opted to let printer driver control paper size
+      if (cfg.useDriverPaper) {
+        dynStyle.textContent = `@media print { @page { margin: 0; } }`;
+      } else if (cfg.layoutMode === 'single') {
+        dynStyle.textContent = `@media print { @page { size: ${totalW}mm ${totalH}mm; margin: 0; } }`;
+      } else if (cfg.layoutMode === 'strip') {
+        const stripTotalH = +((totalH + cfg.gapYMm) * stickers.length + 4).toFixed(1);
+        dynStyle.textContent = `@media print { @page { size: ${totalW}mm ${stripTotalH}mm; margin: 0; } }`;
+      } else {
+        dynStyle.textContent = `@media print { @page { size: A4; margin: 5mm; } }`;
+      }
+
+      const fStore = cfg.fontScale === 'sm' ? '9pt' : (cfg.fontScale === 'lg' ? '13pt' : '11pt');
+      const fName = cfg.fontScale === 'sm' ? '8.5pt' : (cfg.fontScale === 'lg' ? '12pt' : '10pt');
+      const fQty = cfg.fontScale === 'sm' ? '11pt' : (cfg.fontScale === 'lg' ? '16pt' : '13pt');
+      const isNarrowStrip = cfg.heightMm <= 20;
+
+      const containerStyle = cfg.layoutMode === 'grid'
+        ? `display:grid;grid-template-columns:repeat(${cfg.cols}, ${totalW}mm);column-gap:${cfg.gapXMm}mm;row-gap:${cfg.gapYMm}mm;`
+        : (cfg.layoutMode === 'strip'
+          ? `display:flex;flex-direction:column;row-gap:${cfg.gapYMm}mm;`
+          : `display:block;`);
+
+      const cellExtraClass = cfg.layoutMode === 'single' ? 'print-single-page' : '';
+      const cellStyle = `width:${totalW}mm;height:${totalH}mm;padding:${cfg.padYMm}mm ${cfg.padXMm}mm;${cfg.layoutMode === 'single' ? 'margin:0 auto;' : ''}`;
+      const cardStyle = `width:${cfg.widthMm}mm;height:${cfg.heightMm}mm;`;
+
+      sheet.innerHTML = `<div style="${containerStyle}">` + stickers.map(st => {
+        const innerHtml = isNarrowStrip
+          ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:2mm;height:100%;">
+               <strong style="font-size:${fStore};white-space:nowrap;">${st.store}</strong>
+               <span style="font-size:${fName};font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${st.name}</span>
+               <strong style="font-size:${fQty};white-space:nowrap;">${st.qty}隻</strong>
+             </div>`
+          : `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #000;padding-bottom:1px;">
+               <strong style="font-size:${fStore};">${st.store}</strong>
+               ${st.bagLabel ? `<span style="font-size:7.5pt;">${st.bagLabel}</span>` : ''}
+             </div>
+             <div style="font-size:${fName};font-weight:700;margin:1.5px 0;line-height:1.2;">${st.name}</div>
+             <div style="display:flex;justify-content:flex-end;align-items:baseline;">
+               <strong style="font-size:${fQty};">${st.qty} 隻</strong>
+             </div>`;
+        return `
+          <div class="print-sticker-cell ${cellExtraClass}" style="${cellStyle}">
+            <div class="print-sticker-card" style="${cardStyle}">
+              ${innerHtml}
+            </div>
+          </div>
+        `;
+      }).join('') + `</div>`;
+
+      state.orderPrinted[store] = true;
+      saveState();
+      renderOrderSummary();
+      showToast(`已標記「${store}」為已列印，開啟系統列印視窗（共 ${stickers.length} 張）`, 'info');
+      window.print();
+    }
+
+    // ==================== TAB 3: SHIPPING & INVENTORY DEDUCTION ====================
+    function syncShippingFromOrder(store) {
+      const orderRows = state.orders[store] || [];
+      if (!state.shipments[store]) {
+        state.shipments[store] = orderRows.map(r => {
+          const { unitPrice, isDiscount } = getOrderUnitPrice(r, r.orderQty);
+          return {
+            id: 'ship_' + r.id,
+            itemId: r.itemId,
+            name: r.name,
+            size: r.size,
+            orderQty: r.orderQty,
+            lockedUnitPrice: unitPrice,
+            discountApplied: isDiscount,
+            actualQty: r.orderQty,
+            note: ''
+          };
+        });
+        saveState();
+      }
+    }
+
+    function applyShippingInventoryDeduction(store) {
+      const list = state.shipments[store] || [];
+      const prevMap = state.shipDeducted[store] || {};
+      const nextMap = {};
+
+      list.forEach(row => {
+        if (!row.itemId) return;
+        nextMap[row.itemId] = (nextMap[row.itemId] || 0) + (Number(row.actualQty) || 0);
+      });
+
+      const allItemIds = new Set([...Object.keys(prevMap), ...Object.keys(nextMap)]);
+      let totalDelta = 0;
+
+      allItemIds.forEach(itemId => {
+        const prevQty = prevMap[itemId] || 0;
+        const nextQty = nextMap[itemId] || 0;
+        const delta = nextQty - prevQty;
+        if (delta !== 0) {
+          const invItem = state.inventory.find(i => i.id === itemId);
+          if (invItem) {
+            invItem.stockQty = Math.max(0, (Number(invItem.stockQty) || 0) - delta);
+          }
+          totalDelta += delta;
+        }
+      });
+
+      state.shipDeducted[store] = nextMap;
+      saveState();
+      return totalDelta;
+    }
+
+    function archiveConfirmedShipments(forceAll = false) {
+      const today = getTodayDateStr();
+      const confirmedStores = Object.keys(state.shipConfirmedAt || {});
+      let movedCount = 0;
+
+      confirmedStores.forEach(store => {
+        const info = state.shipConfirmedAt[store];
+        if (!info) return;
+        const archiveDate = info.archiveAfter || getArchiveWednesdayStr(info.shipDate);
+        if (!forceAll && today < archiveDate) return;
+
+        const rows = state.shipments[store] || [];
+        if (rows.length > 0) {
+          let totalOrdered = 0, totalActual = 0, totalAmount = 0;
+          const itemsSnap = rows.map(r => {
+            const ord = Number(r.orderQty) || 0;
+            const act = Number(r.actualQty) || 0;
+            const price = Number(r.lockedUnitPrice) || 0;
+            totalOrdered += ord;
+            totalActual += act;
+            totalAmount += act * price;
+            return {
+              name: r.name,
+              size: r.size || '-',
+              orderQty: ord,
+              actualQty: act,
+              lockedUnitPrice: price,
+              discountApplied: !!r.discountApplied,
+              note: r.note || ''
+            };
+          });
+
+          const shipDateClean = (info.shipDate || today).replace(/-/g, '');
+          const seq = String((state.shipmentHistory.length || 0) + 1).padStart(3, '0');
+          state.shipmentHistory.unshift({
+            id: `SH-${shipDateClean}-${seq}`,
+            store,
+            orderDate: info.orderDate || today,
+            shipDate: info.shipDate || today,
+            confirmedAt: info.confirmedAt || `${today} ${formatTimeLocal(new Date())}`,
+            archivedAt: `${today} ${formatTimeLocal(new Date())}`,
+            items: itemsSnap,
+            totalOrdered,
+            totalActual,
+            totalAmount
+          });
+          movedCount += 1;
+        }
+
+        // Clear active order & shipment for this store after moving to history
+        delete state.orders[store];
+        delete state.shipments[store];
+        delete state.shipDeducted[store];
+        delete state.orderPrinted[store];
+        delete state.shipConfirmedAt[store];
+      });
+
+      if (movedCount > 0) {
+        saveState();
+      }
+      return movedCount;
+    }
+
+    function renderHistoryTab() {
+      const allHist = state.shipmentHistory || [];
+
+      // Populate store filter
+      const storeSel = document.getElementById('histStoreFilter');
+      const prevStore = storeSel.value || '全部';
+      const histStores = ['全部'];
+      allHist.forEach(h => { if (h.store && !histStores.includes(h.store)) histStores.push(h.store); });
+      storeSel.innerHTML = histStores.map(s => `<option value="${s}" ${s === prevStore ? 'selected' : ''}>${s === '全部' ? '全部店家' : s}</option>`).join('');
+
+      // Show pending-Wednesday-archive banner if any confirmed shipments are waiting on Tab 3
+      const pendingStores = Object.keys(state.shipConfirmedAt || {});
+      const pendingBanner = document.getElementById('histPendingBanner');
+      if (pendingStores.length > 0) {
+        document.getElementById('histPendingText').textContent = `目前有 ${pendingStores.length} 筆已扣庫存的出貨單仍保留在「出貨單」頁（將於週三自動移入此頁）。`;
+        pendingBanner.classList.remove('hidden');
+      } else {
+        pendingBanner.classList.add('hidden');
+      }
+
+      const dFrom = document.getElementById('histDateFrom').value;
+      const dTo = document.getElementById('histDateTo').value;
+      const stFilter = storeSel.value;
+      const q = (document.getElementById('histSearchInput').value || '').trim().toLowerCase();
+
+      const filtered = allHist.filter(h => {
+        if (dFrom && h.shipDate < dFrom) return false;
+        if (dTo && h.shipDate > dTo) return false;
+        if (stFilter && stFilter !== '全部' && h.store !== stFilter) return false;
+        if (q) {
+          const hitHeader = h.id.toLowerCase().includes(q) || h.store.toLowerCase().includes(q) || h.shipDate.includes(q);
+          const hitItem = (h.items || []).some(it => it.name.toLowerCase().includes(q) || (it.note && it.note.toLowerCase().includes(q)));
+          if (!hitHeader && !hitItem) return false;
+        }
+        return true;
+      });
+
+      let sumQty = 0, sumAmt = 0;
+      filtered.forEach(h => {
+        sumQty += Number(h.totalActual) || 0;
+        sumAmt += Number(h.totalAmount) || 0;
+      });
+      document.getElementById('histSummaryCount').textContent = filtered.length;
+      document.getElementById('histSummaryQty').textContent = sumQty.toLocaleString('zh-TW');
+      document.getElementById('histSummaryAmt').textContent = formatMoney(sumAmt);
+
+      const listEl = document.getElementById('histList');
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-slate-400 text-sm border border-slate-200">找不到符合條件的歷史出貨紀錄</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(h => `
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <button type="button" data-toggle-hist="${h.id}" class="btn-toggle-hist w-full p-4 flex items-center justify-between gap-2 text-left hover:bg-slate-50 transition">
+            <div class="min-w-0">
+              <div class="flex items-center flex-wrap gap-1.5">
+                <span class="font-bold text-sm text-slate-800">${h.store}</span>
+                <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">${h.id}</span>
+                <span class="text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-full">已歸檔對帳</span>
+              </div>
+              <div class="text-xs text-slate-500 mt-1">
+                出貨日 <strong class="text-slate-700">${h.shipDate}</strong> ｜ 訂購日 ${h.orderDate} ｜ 實出 <strong class="text-teal-700">${h.totalActual}</strong> 隻
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <div class="text-base font-extrabold text-teal-800">${formatMoney(h.totalAmount)}</div>
+              <div class="text-[11px] text-teal-700 mt-0.5">點擊展開明細 ▾</div>
+            </div>
+          </button>
+          <div id="hist-body-${h.id}" class="hidden px-4 pb-4 pt-2 border-t border-slate-100 space-y-2 bg-slate-50/50">
+            ${(h.items || []).map(it => `
+              <div class="bg-white rounded-xl p-2.5 border border-slate-200 flex items-start justify-between gap-2 text-xs">
+                <div class="min-w-0">
+                  <div class="font-bold text-slate-800">${it.name} <span class="font-normal text-slate-400">(${it.size})</span></div>
+                  <div class="text-slate-500 mt-0.5">
+                    訂 ${it.orderQty} ／ 實出 <strong class="text-teal-700">${it.actualQty}</strong> ｜ 單價 ${formatMoney(it.lockedUnitPrice)}${it.discountApplied ? ' <span class="text-emerald-700 font-semibold">(優惠)</span>' : ''}
+                  </div>
+                  ${it.note ? `<div class="text-amber-700 mt-0.5">備註：${it.note}</div>` : ''}
+                </div>
+                <div class="font-bold text-teal-800 shrink-0">${formatMoney(it.actualQty * it.lockedUnitPrice)}</div>
+              </div>
+            `).join('')}
+            <div class="flex items-center justify-between pt-2 text-[11px] text-slate-400">
+              <span>確認出貨：${h.confirmedAt || '-'}</span>
+              <button type="button" data-copy-hist="${h.id}" class="btn-copy-hist px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold">複製對帳明細</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('.btn-toggle-hist').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const body = document.getElementById('hist-body-' + btn.dataset.toggleHist);
+          if (body) body.classList.toggle('hidden');
+        });
+      });
+
+      listEl.querySelectorAll('.btn-copy-hist').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const h = state.shipmentHistory.find(x => x.id === btn.dataset.copyHist);
+          if (!h) return;
+          const lines = [
+            `【歷史出貨對帳單】${h.id}`,
+            `店家：${h.store}`,
+            `訂購日期：${h.orderDate} ｜ 出貨日期：${h.shipDate}`,
+            '----------------'
+          ];
+          (h.items || []).forEach((it, i) => {
+            const noteStr = it.note ? ` [備註:${it.note}]` : '';
+            lines.push(`${i + 1}. ${it.name} (${it.size}) 訂${it.orderQty}/實出${it.actualQty} @${it.lockedUnitPrice}${it.discountApplied ? '(優惠)' : ''} = ${formatMoney(it.actualQty * it.lockedUnitPrice)}${noteStr}`);
+          });
+          lines.push('----------------');
+          lines.push(`實際出貨總數：${h.totalActual} 隻 ｜ 總金額：${formatMoney(h.totalAmount)}`);
+          copyTextToClipboard(lines.join('\n'), e.currentTarget, '已複製');
+        });
+      });
+      lucide.createIcons();
+    }
+
+    function renderShippingTab() {
+      const storeSel = document.getElementById('shipStoreSelect');
+      storeSel.innerHTML = buildGroupedStoreOptionsHtml(state.stores, state.currentShipStore, s => {
+        return (state.orders[s] && state.orders[s].length > 0) ? '（有訂購單）' : '（無訂購單）';
+      });
+
+      const store = state.currentShipStore;
+      const meta = ensureStoreMeta(store);
+      document.getElementById('shipOrderDateDisplay').textContent = meta.orderDate;
+      document.getElementById('shipShipDate').value = meta.shipDate;
+      const archInfo = state.shipConfirmedAt[store];
+      const archNotice = document.getElementById('shipArchiveNotice');
+      if (archInfo) {
+        document.getElementById('shipArchiveNoticeText').textContent = `已扣庫存並保留於此頁，將於 ${archInfo.archiveAfter}（週三）自動移至「歷史出貨查詢」。`;
+        archNotice.classList.remove('hidden');
+      } else {
+        archNotice.classList.add('hidden');
+      }
+
+      syncShippingFromOrder(store);
+      const list = state.shipments[store] || [];
+
+      const badge = document.getElementById('shipDeductBadge');
+      const deductedObj = state.shipDeducted[store];
+      const hasDeducted = deductedObj && Object.values(deductedObj).some(v => v > 0);
+      if (hasDeducted) {
+        badge.textContent = '已扣庫存';
+        badge.className = 'text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 font-semibold';
+      } else {
+        badge.textContent = '尚未扣庫存';
+        badge.className = 'text-[11px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200 font-medium';
+      }
+
+      const listEl = document.getElementById('shipList');
+      if (list.length === 0) {
+        listEl.innerHTML = `<div class="bg-white rounded-2xl p-6 text-center text-slate-400 text-sm border border-slate-200">此店家目前沒有訂購單資料，可先到「訂購單」建立，或點右上角「增加品項」直接包貨。</div>`;
+      } else {
+        listEl.innerHTML = list.map(row => {
+          const sub = row.lockedUnitPrice * (Number(row.actualQty) || 0);
+          const invItem = state.inventory.find(i => i.id === row.itemId);
+          const stockText = invItem ? `目前庫存: ${invItem.stockQty}` : '';
+          return `
+            <div class="bg-white rounded-2xl p-3.5 shadow-sm border border-slate-200 space-y-2.5">
+              <div class="flex justify-between items-start gap-2">
+                <div>
+                  <h4 class="font-bold text-sm text-slate-800">${row.name}</h4>
+                  <div class="flex flex-wrap items-center gap-1.5 mt-1 text-xs">
+                    <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md">尺寸: ${row.size || '-'}</span>
+                    <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-medium">訂購量: ${row.orderQty}</span>
+                    ${row.discountApplied
+                      ? `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold">鎖定優惠價 ${formatMoney(row.lockedUnitPrice)}</span>`
+                      : `<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-semibold">單價 ${formatMoney(row.lockedUnitPrice)}</span>`
+                    }
+                    ${stockText ? `<span class="text-slate-500 font-medium text-[11px]">${stockText}</span>` : ''}
+                  </div>
+                </div>
+                <button data-del-ship="${row.id}" class="btn-del-ship p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl shrink-0">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <div class="grid grid-cols-12 gap-2 items-center pt-1 border-t border-slate-100">
+                <div class="col-span-5">
+                  <label class="block text-[11px] text-slate-500 mb-0.5">實際出貨量</label>
+                  <input type="number" min="0" inputmode="numeric" value="${row.actualQty}" data-ship-qty-id="${row.id}" class="inp-ship-qty w-full px-2.5 py-2 bg-teal-50/50 border border-teal-300 rounded-xl font-bold text-teal-900" />
+                </div>
+                <div class="col-span-7">
+                  <label class="block text-[11px] text-slate-500 mb-0.5">備註</label>
+                  <input type="text" value="${row.note || ''}" placeholder="缺貨/損耗/加註..." data-ship-note-id="${row.id}" class="inp-ship-note w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+                </div>
+              </div>
+              <div class="text-right text-xs text-slate-500">
+                實出小計：<strong class="text-sm text-teal-800">${formatMoney(sub)}</strong>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        listEl.querySelectorAll('.btn-del-ship').forEach(b => {
+          b.addEventListener('click', () => {
+            state.shipments[store] = state.shipments[store].filter(r => r.id !== b.dataset.delShip);
+            saveState();
+            renderShippingTab();
+            showToast('已移除品項（請點「確認出貨並扣庫存」同步更新存貨）', 'info');
+          });
+        });
+
+        listEl.querySelectorAll('.inp-ship-qty').forEach(inp => {
+          inp.addEventListener('input', () => {
+            const row = state.shipments[store].find(r => r.id === inp.dataset.shipQtyId);
+            if (!row) return;
+            row.actualQty = Math.max(0, parseInt(inp.value, 10) || 0);
+            saveState();
+            updateShippingTotalsOnly();
+            const card = inp.closest('.bg-white');
+            card.querySelector('strong.text-teal-800').textContent = formatMoney(row.lockedUnitPrice * row.actualQty);
+          });
+        });
+
+        listEl.querySelectorAll('.inp-ship-note').forEach(inp => {
+          inp.addEventListener('input', () => {
+            const row = state.shipments[store].find(r => r.id === inp.dataset.shipNoteId);
+            if (!row) return;
+            row.note = inp.value;
+            saveState();
+          });
+        });
+      }
+
+      updateShippingTotalsOnly();
+      lucide.createIcons();
+    }
+
+    function updateShippingTotalsOnly() {
+      const list = state.shipments[state.currentShipStore] || [];
+      let ordSum = 0, actSum = 0, amtSum = 0;
+      list.forEach(r => {
+        ordSum += Number(r.orderQty) || 0;
+        actSum += Number(r.actualQty) || 0;
+        amtSum += (Number(r.actualQty) || 0) * (Number(r.lockedUnitPrice) || 0);
+      });
+      document.getElementById('shipTotalOrdered').textContent = ordSum.toLocaleString('zh-TW');
+      document.getElementById('shipTotalActual').textContent = actSum.toLocaleString('zh-TW');
+      document.getElementById('shipTotalAmount').textContent = formatMoney(amtSum);
+    }
+
+    // ==================== TAB 4: DAILY MORTALITY LOG ====================
+    function renderMortalityTab() {
+      const dateInp = document.getElementById('mortDateInput');
+      if (!dateInp.value) dateInp.value = getTodayDateStr();
+
+      const cats = getUniqueCategories();
+      const catSel = document.getElementById('mortCategorySelect');
+      const prevCat = catSel.value;
+      catSel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+      if (prevCat && cats.includes(prevCat)) catSel.value = prevCat;
+
+      updateMortItemDropdown();
+      renderMortalityLogs();
+    }
+
+    function updateMortItemDropdown(selectedItemId = null) {
+      const cat = document.getElementById('mortCategorySelect').value;
+      const matching = state.inventory.filter(i => i.category === cat);
+      const itemSel = document.getElementById('mortItemSelect');
+      itemSel.innerHTML = matching.map(i => `<option value="${i.id}">${i.name} (${i.size || '-'})</option>`).join('');
+      if (selectedItemId && matching.some(i => i.id === selectedItemId)) {
+        itemSel.value = selectedItemId;
+      }
+      updateMortItemPreview();
+    }
+
+    function updateMortItemPreview() {
+      const itemId = document.getElementById('mortItemSelect').value;
+      const item = state.inventory.find(i => i.id === itemId);
+      const previewEl = document.getElementById('mortItemPreview');
+      if (!item) {
+        previewEl.classList.add('hidden');
+        return;
+      }
+      previewEl.classList.remove('hidden');
+      document.getElementById('mortPrevSize').textContent = item.size || '-';
+      document.getElementById('mortPrevStock').textContent = item.stockQty;
+    }
+
+    function renderMortalityLogs() {
+      const filterDateEl = document.getElementById('mortFilterDate');
+      filterDateEl.value = state.mortFilterDate || '';
+
+      const logs = state.mortFilterDate
+        ? state.mortalityLogs.filter(m => m.date === state.mortFilterDate)
+        : state.mortalityLogs;
+
+      const totalDead = logs.reduce((acc, m) => acc + (Number(m.qty) || 0), 0);
+      document.getElementById('mortTotalQty').textContent = totalDead.toLocaleString('zh-TW');
+      updateNavBadges();
+
+      const listEl = document.getElementById('mortLogList');
+      if (logs.length === 0) {
+        listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">${state.mortFilterDate ? state.mortFilterDate + ' ' : ''}目前尚無死魚記錄</div>`;
+        return;
+      }
+
+      listEl.innerHTML = logs.map(m => `
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex items-start justify-between gap-2">
+          <div class="min-w-0 space-y-1">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-semibold bg-white border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">${m.date} ${m.time}</span>
+              <span class="text-[11px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">-${m.qty} 隻</span>
+            </div>
+            <div class="font-bold text-sm text-slate-800">${m.name} <span class="text-xs font-normal text-slate-500">(${m.size})</span></div>
+            ${m.reason ? `<div class="text-xs text-slate-500">備註：${m.reason}</div>` : ''}
+          </div>
+          <button data-del-mort="${m.id}" class="btn-del-mort text-xs text-rose-600 hover:bg-rose-50 px-2 py-1.5 rounded-lg border border-rose-200 shrink-0 font-medium">
+            刪除回補
+          </button>
+        </div>
+      `).join('');
+
+      listEl.querySelectorAll('.btn-del-mort').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const logId = btn.dataset.delMort;
+          const target = state.mortalityLogs.find(m => m.id === logId);
+          if (!target) return;
+          openConfirm('刪除死魚記錄並回補庫存', `確定要刪除「${target.name} -${target.qty} 隻」的記錄，並將 ${target.qty} 隻加回目前存貨嗎？`, () => {
+            const invItem = state.inventory.find(i => i.id === target.itemId);
+            if (invItem) {
+              invItem.stockQty = (Number(invItem.stockQty) || 0) + (Number(target.qty) || 0);
+            }
+            state.mortalityLogs = state.mortalityLogs.filter(m => m.id !== logId);
+            saveState();
+            updateMortItemPreview();
+            renderMortalityLogs();
+            showToast(`已刪除記錄，並回補「${target.name}」庫存 +${target.qty} 隻`);
+          });
+        });
+      });
+    }
+
+    function copyTextToClipboard(text, btnToFlash = null, flashMsg = '已複製') {
+      const done = () => {
+        showToast('已複製明細到剪貼簿');
+        if (btnToFlash) flashButton(btnToFlash, flashMsg, 1800);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      } else {
+        fallbackCopy(text, done);
+      }
+    }
+
+    function fallbackCopy(text, onDone) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        if (onDone) onDone();
+      } catch (e) {
+        showToast('複製失敗，請手動選取', 'warn');
+      }
+      document.body.removeChild(ta);
+    }
+
+    // ==================== INIT & EVENT LISTENERS ====================
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      // 若已達週三自動結轉日，自動將已扣庫存的出貨單統一移入歷史出貨查詢
+      const autoMoved = archiveConfirmedShipments(false);
+      if (autoMoved > 0) {
+        setTimeout(() => showToast(`已自動將 ${autoMoved} 筆上期出貨單移入「歷史出貨查詢」`, 'info'), 400);
+      }
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      document.getElementById('btnResetDemo').addEventListener('click', () => {
+        openConfirm('重設範例資料', '確定要將存貨、訂購單、出貨單與死魚記錄重設回 11.21 報價單預設狀態嗎？', () => {
+          const def = createDefaultData();
+          state = { ...state, ...def };
+          saveState();
+          document.getElementById('shipActionStatus').classList.add('hidden');
+          document.getElementById('mortActionStatus').classList.add('hidden');
+          switchTab(state.activeTab);
+          showToast('已重設為預設範例資料');
+        });
+      });
+
+      // Setup Quick Searches for Tab 2 (Order) & Tab 4 (Mortality)
+      setupQuickItemSearch({
+        inputId: 'ordItemSearch',
+        clearBtnId: 'btnClearOrdSearch',
+        resultsId: 'ordSearchResults',
+        onSelect: picked => {
+          document.getElementById('ordCategorySelect').value = picked.category;
+          updateOrderItemDropdown(picked.id);
+          document.getElementById('ordQtyInput').focus();
+          showToast(`已選取「${picked.name}」`, 'info');
+        }
+      });
+
+      setupQuickItemSearch({
+        inputId: 'mortItemSearch',
+        clearBtnId: 'btnClearMortSearch',
+        resultsId: 'mortSearchResults',
+        onSelect: picked => {
+          document.getElementById('mortCategorySelect').value = picked.category;
+          updateMortItemDropdown(picked.id);
+          document.getElementById('mortQtyInput').focus();
+          showToast(`已選取「${picked.name}」`, 'info');
+        }
+      });
+
+      // Tab 1 listeners
+      document.getElementById('invSearch').addEventListener('input', e => {
+        state.invSearch = e.target.value;
+        renderInventory();
+      });
+      document.getElementById('btnOpenAddInv').addEventListener('click', () => openInvModal(null));
+      document.getElementById('btnCloseInvModal').addEventListener('click', closeInvModal);
+      document.getElementById('btnSaveInvItem').addEventListener('click', () => {
+        const id = document.getElementById('editInvId').value;
+        const category = document.getElementById('editInvCategory').value.trim() || '其它魚';
+        const name = document.getElementById('editInvName').value.trim();
+        if (!name) { showToast('請輸入品名', 'warn'); return; }
+        const stockQty = Math.max(0, parseInt(document.getElementById('editInvStock').value, 10) || 0);
+        const size = document.getElementById('editInvSize').value.trim() || '-';
+        const regularPrice = Math.max(0, parseFloat(document.getElementById('editInvRegPrice').value) || 0);
+        const dqRaw = document.getElementById('editInvDiscQty').value.trim();
+        const dpRaw = document.getElementById('editInvDiscPrice').value.trim();
+        const discountThreshold = dqRaw ? parseInt(dqRaw, 10) : null;
+        const discountPrice = dpRaw ? parseFloat(dpRaw) : null;
+        const note = document.getElementById('editInvNote').value.trim();
+
+        if (id) {
+          const idx = state.inventory.findIndex(i => i.id === id);
+          if (idx !== -1) {
+            state.inventory[idx] = { id, category, name, stockQty, size, regularPrice, discountThreshold, discountPrice, note };
+          }
+          showToast(`已更新「${name}」存貨資料`);
+        } else {
+          state.inventory.unshift({
+            id: 'item_' + Date.now(),
+            category, name, stockQty, size, regularPrice, discountThreshold, discountPrice, note
+          });
+          showToast(`已新增存貨品項「${name}」`);
+        }
+        saveState();
+        closeInvModal();
+        renderInventory();
+      });
+      document.getElementById('btnDeleteInvItem').addEventListener('click', () => {
+        const id = document.getElementById('editInvId').value;
+        openConfirm('刪除品項', '確定要從存貨中刪除此品項嗎？', () => {
+          state.inventory = state.inventory.filter(i => i.id !== id);
+          saveState();
+          closeInvModal();
+          renderInventory();
+          showToast('已刪除存貨品項', 'info');
+        });
+      });
+
+      // Tab 2 listeners
+
+      document.getElementById('ordStoreSelect').addEventListener('change', e => {
+        state.currentOrderStore = e.target.value;
+        ensureStoreMeta(state.currentOrderStore);
+        saveState();
+        renderOrderTab();
+        showToast(`已切換店家至「${state.currentOrderStore}」`, 'info');
+      });
+      document.getElementById('btnAddStore').addEventListener('click', () => {
+        if (!commitPendingNewStore(true)) {
+          showToast('請先輸入新店家名稱', 'warn');
+          return;
+        }
+        renderOrderTab();
+      });
+      document.getElementById('ordNewStoreInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (commitPendingNewStore(true)) renderOrderTab();
+        }
+      });
+      document.getElementById('ordNewStoreInput').addEventListener('change', () => {
+        if (commitPendingNewStore(true)) renderOrderTab();
+      });
+      document.getElementById('ordOrderDate').addEventListener('change', e => {
+        const meta = ensureStoreMeta(state.currentOrderStore);
+        meta.orderDate = e.target.value || getTodayDateStr();
+        saveState();
+        renderOrderSummary();
+        showToast(`已更新訂購日期為 ${meta.orderDate}`, 'info');
+      });
+      document.getElementById('ordShipDate').addEventListener('change', e => {
+        const meta = ensureStoreMeta(state.currentOrderStore);
+        meta.shipDate = e.target.value || getNextMondayDateStr();
+        saveState();
+        renderOrderSummary();
+        showToast(`已更新出貨日期為 ${meta.shipDate}`, 'info');
+      });
+      document.getElementById('ordCategorySelect').addEventListener('change', () => updateOrderItemDropdown());
+      document.getElementById('ordItemSelect').addEventListener('change', updateOrderPreview);
+      document.getElementById('ordQtyInput').addEventListener('input', updateOrderPreview);
+      document.getElementById('btnAddToOrder').addEventListener('click', e => {
+        const btn = e.currentTarget;
+        const switchedStore = commitPendingNewStore(false);
+        if (switchedStore) {
+          const storeSel = document.getElementById('ordStoreSelect');
+          storeSel.innerHTML = buildGroupedStoreOptionsHtml(state.stores, state.currentOrderStore);
+        }
+
+        const itemId = document.getElementById('ordItemSelect').value;
+        const item = state.inventory.find(i => i.id === itemId);
+        const qty = parseInt(document.getElementById('ordQtyInput').value, 10);
+        if (!item) { showToast('請先選擇品項', 'warn'); return; }
+        if (!qty || qty <= 0) { showToast('請輸入正確的訂購數量', 'warn'); return; }
+
+        const store = state.currentOrderStore;
+        ensureStoreMeta(store);
+        if (!state.orders[store]) state.orders[store] = [];
+        const existing = state.orders[store].find(r => r.itemId === item.id);
+        if (existing) {
+          existing.orderQty += qty;
+        } else {
+          state.orders[store].push({
+            id: 'ord_' + Date.now(),
+            itemId: item.id,
+            name: item.name,
+            category: item.category,
+            size: item.size,
+            regularPrice: item.regularPrice,
+            discountThreshold: item.discountThreshold,
+            discountPrice: item.discountPrice,
+            orderQty: qty
+          });
+        }
+        delete state.shipments[store];
+        state.orderPrinted[store] = false;
+        document.getElementById('ordQtyInput').value = '';
+        updateOrderPreview();
+        saveState();
+        renderOrderSummary();
+        flashButton(btn, `已加入 ${qty} 隻`);
+        showToast(`已加入「${store}」：${item.name} x${qty}`);
+      });
+
+
+      // Sticker modal listeners
+
+      document.getElementById('btnToggleBagControls').addEventListener('click', () => {
+        const box = document.getElementById('stickerBagControls');
+        const isHidden = box.classList.toggle('hidden');
+        document.getElementById('bagToggleLabel').textContent = isHidden ? '展開 ▾' : '收合 ▴';
+      });
+      document.getElementById('btnCloseStickerModal').addEventListener('click', () => {
+        document.getElementById('stickerModal').classList.add('hidden');
+        document.getElementById('stickerModal').classList.remove('flex');
+      });
+      document.getElementById('btnCancelStickerModal').addEventListener('click', () => {
+        document.getElementById('stickerModal').classList.add('hidden');
+        document.getElementById('stickerModal').classList.remove('flex');
+      });
+      ['stLayoutMode', 'stCols', 'stWidth', 'stHeight', 'stPadX', 'stPadY', 'stGapX', 'stGapY', 'stFontScale', 'stUseDriverPaper'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          readStickerConfigFromInputs();
+          renderStickerModalContent();
+        });
+        document.getElementById(id).addEventListener('change', () => {
+          readStickerConfigFromInputs();
+          renderStickerModalContent();
+        });
+      });
+      document.querySelectorAll('.btn-sticker-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const p = btn.dataset.preset;
+          if (p === 'a4') {
+            state.stickerConfig = { layoutMode: 'grid', cols: 3, widthMm: 60, heightMm: 38, padXMm: 0, padYMm: 0, gapXMm: 5, gapYMm: 5, fontScale: 'md', useDriverPaper: false };
+            showToast('已套用 A4 三欄貼紙格式', 'info');
+          } else if (p === '50x30') {
+            state.stickerConfig = { layoutMode: 'single', cols: 1, widthMm: 50, heightMm: 30, padXMm: 0, padYMm: 0, gapXMm: 0, gapYMm: 0, fontScale: 'sm', useDriverPaper: false };
+            showToast('已套用 50×30mm 捲紙格式', 'info');
+          } else if (p === '70x50') {
+            state.stickerConfig = { layoutMode: 'single', cols: 1, widthMm: 70, heightMm: 50, padXMm: 0, padYMm: 0, gapXMm: 0, gapYMm: 0, fontScale: 'lg', useDriverPaper: false };
+            showToast('已套用 70×50mm 捲紙格式', 'info');
+          } else if (p === 'strip15') {
+            state.stickerConfig = { layoutMode: 'strip', cols: 1, widthMm: 50, heightMm: 13, padXMm: 1, padYMm: 1, gapXMm: 0, gapYMm: 2, fontScale: 'sm', useDriverPaper: false };
+            showToast('已套用 15mm 長條捲紙格式（含上下各1mm留邊）', 'info');
+          }
+          saveState();
+          syncStickerConfigToInputs();
+          renderStickerModalContent();
+        });
+      });
+      document.getElementById('btnDoPrintStickers').addEventListener('click', executePrintStickers);
+
+
+
+      // Tab 3 listeners
+      document.getElementById('shipStoreSelect').addEventListener('change', e => {
+        state.currentShipStore = e.target.value;
+        document.getElementById('shipActionStatus').classList.add('hidden');
+        saveState();
+        renderShippingTab();
+        showToast(`已切換出貨店家至「${state.currentShipStore}」`, 'info');
+      });
+
+      document.getElementById('shipShipDate').addEventListener('change', e => {
+        const store = state.currentShipStore;
+        const meta = ensureStoreMeta(store);
+        meta.shipDate = e.target.value || getNextMondayDateStr();
+        if (state.shipConfirmedAt[store]) {
+          state.shipConfirmedAt[store].shipDate = meta.shipDate;
+          state.shipConfirmedAt[store].archiveAfter = getArchiveWednesdayStr(meta.shipDate);
+        }
+        saveState();
+        renderShippingTab();
+        updateNavBadges();
+        showToast(`已更新出貨日期為 ${meta.shipDate}`, 'info');
+      });
+      document.getElementById('btnOpenAddShipItem').addEventListener('click', () => {
+        const cats = getUniqueCategories();
+        const catSel = document.getElementById('shipAddCategory');
+        catSel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+        const updateShipAddItems = () => {
+          const c = catSel.value;
+          const items = state.inventory.filter(i => i.category === c);
+          document.getElementById('shipAddItem').innerHTML = items.map(i => `<option value="${i.id}">${i.name} (${i.size || '-'}) - ${formatMoney(i.regularPrice)}</option>`).join('');
+        };
+        catSel.onchange = updateShipAddItems;
+        updateShipAddItems();
+        document.getElementById('shipAddQty').value = 10;
+        document.getElementById('shipAddNote').value = '';
+        const modal = document.getElementById('shipAddModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      });
+      document.getElementById('btnCloseShipAddModal').addEventListener('click', () => {
+        const modal = document.getElementById('shipAddModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      });
+      document.getElementById('btnConfirmShipAdd').addEventListener('click', () => {
+        const itemId = document.getElementById('shipAddItem').value;
+        const item = state.inventory.find(i => i.id === itemId);
+        const qty = Math.max(1, parseInt(document.getElementById('shipAddQty').value, 10) || 1);
+        const note = document.getElementById('shipAddNote').value.trim();
+        if (!item) return;
+        const store = state.currentShipStore;
+        if (!state.shipments[store]) state.shipments[store] = [];
+        const { unitPrice, isDiscount } = getOrderUnitPrice(item, qty);
+        state.shipments[store].push({
+          id: 'ship_add_' + Date.now(),
+          itemId: item.id,
+          name: item.name,
+          size: item.size,
+          orderQty: 0,
+          lockedUnitPrice: unitPrice,
+          discountApplied: isDiscount,
+          actualQty: qty,
+          note
+        });
+        saveState();
+        const modal = document.getElementById('shipAddModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        renderShippingTab();
+        showToast(`已追加 ${item.name} x${qty}（請點確認出貨扣庫存）`);
+      });
+      document.getElementById('btnSaveShipping').addEventListener('click', e => {
+        const btn = e.currentTarget;
+        const store = state.currentShipStore;
+        const list = state.shipments[store] || [];
+        if (list.length === 0) {
+          showToast('出貨單目前沒有品項', 'warn');
+          return;
+        }
+        const delta = applyShippingInventoryDeduction(store);
+        const meta = ensureStoreMeta(store);
+        state.shipConfirmedAt[store] = {
+          confirmedAt: `${getTodayDateStr()} ${formatTimeLocal(new Date())}`,
+          orderDate: meta.orderDate,
+          shipDate: meta.shipDate,
+          archiveAfter: getArchiveWednesdayStr(meta.shipDate)
+        };
+        saveState();
+        renderShippingTab();
+        updateNavBadges();
+        const nowStr = formatTimeLocal(new Date());
+        let statusMsg = '';
+        if (delta > 0) {
+          statusMsg = `已於 ${nowStr} 確認出貨，從目前存貨扣除 ${delta} 隻！`;
+          flashButton(btn, `已扣庫存 (-${delta}隻)`);
+          showToast(`確認出貨成功！已扣除庫存 ${delta} 隻`);
+        } else if (delta < 0) {
+          statusMsg = `已於 ${nowStr} 更新出貨單，並回補存貨 +${Math.abs(delta)} 隻！`;
+          flashButton(btn, `已回補 (+${Math.abs(delta)}隻)`);
+          showToast(`出貨單已更新，回補存貨 ${Math.abs(delta)} 隻`);
+        } else {
+          statusMsg = `已於 ${nowStr} 儲存「${store}」出貨單（庫存數量先前已扣完，無額外變動）。`;
+          flashButton(btn, '已儲存出貨單');
+          showToast(`已儲存「${store}」出貨單（庫存已同步）`, 'info');
+        }
+        const statusBox = document.getElementById('shipActionStatus');
+        document.getElementById('shipActionStatusText').textContent = statusMsg;
+        statusBox.classList.remove('hidden');
+        lucide.createIcons();
+      });
+      document.getElementById('btnCopyShippingText').addEventListener('click', e => {
+        const store = state.currentShipStore;
+        const meta = ensureStoreMeta(store);
+        const list = state.shipments[store] || [];
+        if (list.length === 0) { showToast('出貨單是空的，無法複製', 'warn'); return; }
+        let actSum = 0, amtSum = 0;
+        const lines = [
+          `【出貨單】店家：${store}`,
+          `訂購日期：${meta.orderDate} ｜ 出貨日期：${meta.shipDate}`,
+          '----------------'
+        ];
+        list.forEach((r, idx) => {
+          const sub = r.lockedUnitPrice * (Number(r.actualQty) || 0);
+          actSum += Number(r.actualQty) || 0;
+          amtSum += sub;
+          const noteStr = r.note ? ` [備註:${r.note}]` : '';
+          lines.push(`${idx + 1}. ${r.name} (${r.size}) 訂${r.orderQty}/實出${r.actualQty} @${r.lockedUnitPrice}${r.discountApplied ? '(優惠)' : ''} = ${formatMoney(sub)}${noteStr}`);
+        });
+        lines.push('----------------');
+        lines.push(`實際出貨總數：${actSum} ｜ 實出總金額：${formatMoney(amtSum)}`);
+        copyTextToClipboard(lines.join('\n'), e.currentTarget, '已複製');
+      });
+
+      // Tab 4 listeners: Daily Mortality
+      document.getElementById('mortCategorySelect').addEventListener('change', () => updateMortItemDropdown());
+      document.getElementById('mortItemSelect').addEventListener('change', updateMortItemPreview);
+      document.querySelectorAll('.btn-mort-reason').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('mortReasonInput').value = btn.dataset.reason;
+          showToast(`已帶入原因：${btn.dataset.reason}`, 'info');
+        });
+      });
+      document.getElementById('btnAddMortality').addEventListener('click', e => {
+        const btn = e.currentTarget;
+        const date = document.getElementById('mortDateInput').value || getTodayDateStr();
+        const itemId = document.getElementById('mortItemSelect').value;
+        const item = state.inventory.find(i => i.id === itemId);
+        const qty = parseInt(document.getElementById('mortQtyInput').value, 10);
+        const reason = document.getElementById('mortReasonInput').value.trim();
+
+        if (!item) { showToast('請選擇魚種或爬蟲', 'warn'); return; }
+        if (!qty || qty <= 0) { showToast('請輸入正確的死魚數量', 'warn'); return; }
+
+        const prevStock = Number(item.stockQty) || 0;
+        item.stockQty = Math.max(0, prevStock - qty);
+
+        const nowTime = formatTimeLocal(new Date());
+        state.mortalityLogs.unshift({
+          id: 'mort_' + Date.now(),
+          date,
+          time: nowTime,
+          itemId: item.id,
+          category: item.category,
+          name: item.name,
+          size: item.size,
+          qty,
+          reason
+        });
+
+        if (state.mortFilterDate && state.mortFilterDate !== date) {
+          state.mortFilterDate = date;
+        }
+        saveState();
+
+        document.getElementById('mortQtyInput').value = '';
+        document.getElementById('mortReasonInput').value = '';
+        updateMortItemPreview();
+        renderMortalityLogs();
+
+        const msg = `已於 ${nowTime} 記錄「${item.name}」死魚 ${qty} 隻，存貨由 ${prevStock} 扣為 ${item.stockQty} 隻`;
+        document.getElementById('mortActionStatusText').textContent = msg;
+        document.getElementById('mortActionStatus').classList.remove('hidden');
+        flashButton(btn, `已記錄並扣 ${qty} 隻`);
+        showToast(`死魚已記錄！${item.name} 存貨剩餘 ${item.stockQty} 隻`);
+        lucide.createIcons();
+      });
+
+      document.getElementById('mortFilterDate').addEventListener('change', e => {
+        state.mortFilterDate = e.target.value;
+        saveState();
+        renderMortalityLogs();
+        showToast(state.mortFilterDate ? `已篩選 ${state.mortFilterDate} 記錄` : '已顯示全部死魚記錄', 'info');
+      });
+      document.getElementById('btnMortShowAll').addEventListener('click', () => {
+        state.mortFilterDate = '';
+        saveState();
+        renderMortalityLogs();
+        showToast('已顯示全部日期的死魚記錄', 'info');
+      });
+      document.getElementById('btnCopyMortText').addEventListener('click', e => {
+        const logs = state.mortFilterDate
+          ? state.mortalityLogs.filter(m => m.date === state.mortFilterDate)
+          : state.mortalityLogs;
+        if (logs.length === 0) { showToast('目前沒有死魚記錄可複製', 'warn'); return; }
+        const total = logs.reduce((acc, m) => acc + (Number(m.qty) || 0), 0);
+        const title = state.mortFilterDate ? `【每日死魚記錄】${state.mortFilterDate}` : '【死魚記錄總表】';
+        const lines = [title, '----------------'];
+        logs.forEach((m, i) => {
+          const rStr = m.reason ? ` (${m.reason})` : '';
+          lines.push(`${i + 1}. [${m.date} ${m.time}] ${m.name} (${m.size}) -${m.qty}隻${rStr}`);
+        });
+        lines.push('----------------');
+        lines.push(`累計折損總數：${total} 隻`);
+        copyTextToClipboard(lines.join('\n'), e.currentTarget, '已複製');
+      });
+
+      // Manual archive trigger (for testing or early Wednesday close)
+      const handleManualArchive = () => {
+        const cnt = Object.keys(state.shipConfirmedAt || {}).length;
+        if (cnt === 0) { showToast('目前沒有已扣庫存的出貨單可移入歷史', 'warn'); return; }
+        openConfirm('統一移入歷史出貨查詢', `確定要將目前 ${cnt} 筆已扣庫存的出貨單移入「歷史出貨查詢」嗎？移入後可至第 5 頁純查詢對帳。`, () => {
+          const moved = archiveConfirmedShipments(true);
+          updateNavBadges();
+          if (state.activeTab === 'shipping') renderShippingTab();
+          if (state.activeTab === 'history') renderHistoryTab();
+          showToast(`已將 ${moved} 筆出貨單移入「歷史出貨查詢」`);
+        });
+      };
+      document.getElementById('btnManualArchiveNow').addEventListener('click', handleManualArchive);
+      document.getElementById('btnArchiveFromHistoryTab').addEventListener('click', handleManualArchive);
+
+      // Tab 5 History filter listeners
+      ['histDateFrom', 'histDateTo', 'histStoreFilter', 'histSearchInput'].forEach(id => {
+        document.getElementById(id).addEventListener('input', renderHistoryTab);
+        document.getElementById(id).addEventListener('change', renderHistoryTab);
+      });
+      document.getElementById('btnHistPresetAll').addEventListener('click', () => {
+        document.getElementById('histDateFrom').value = '';
+        document.getElementById('histDateTo').value = '';
+        document.getElementById('histStoreFilter').value = '全部';
+        document.getElementById('histSearchInput').value = '';
+        renderHistoryTab();
+        showToast('已顯示全部歷史出貨紀錄', 'info');
+      });
+      document.getElementById('btnHistPresetMonth').addEventListener('click', () => {
+        const now = new Date();
+        const firstDay = formatDateLocal(new Date(now.getFullYear(), now.getMonth(), 1));
+        const lastDay = formatDateLocal(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+        document.getElementById('histDateFrom').value = firstDay;
+        document.getElementById('histDateTo').value = lastDay;
+        renderHistoryTab();
+        showToast('已篩選本月歷史出貨紀錄', 'info');
+      });
+      document.getElementById('btnHistPresetToday').addEventListener('click', () => {
+        const today = getTodayDateStr();
+        document.getElementById('histDateFrom').value = today;
+        document.getElementById('histDateTo').value = today;
+        renderHistoryTab();
+        showToast(`已篩選 ${today} 出貨紀錄`, 'info');
+      });
+
+      switchTab('inventory');
+    });
+  </script>
+</body>
+</html>
