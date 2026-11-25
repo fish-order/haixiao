@@ -6,6 +6,8 @@
   <title>海嘯觀賞魚・爬蟲批發系統</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
     body {
@@ -63,8 +65,14 @@
             <i data-lucide="fish" class="w-4 h-4 text-teal-100"></i>
           </div>
           <div>
-            <h1 class="text-sm sm:text-base font-bold leading-tight tracking-wide">海嘯觀賞魚・爬蟲批發</h1>
-            <p class="text-[11px] text-teal-200">手機優先測試版（本地儲存）</p>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <h1 class="text-sm sm:text-base font-bold leading-tight tracking-wide">海嘯觀賞魚・爬蟲批發</h1>
+              <span id="appVersionBadge" class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-teal-950/60 text-teal-100 border border-teal-400/40">v1.1.0</span>
+            </div>
+            <p id="cloudSyncStatus" class="text-[11px] text-teal-200 flex items-center gap-1">
+              <span id="cloudSyncDot" class="inline-block w-2 h-2 rounded-full bg-amber-300"></span>
+              <span id="cloudSyncText">連線 Firebase 中...</span>
+            </p>
           </div>
         </div>
         <button id="btnResetDemo" class="text-xs bg-teal-700 hover:bg-teal-600 active:bg-teal-900 px-2.5 py-1.5 rounded-lg border border-teal-500/40 flex items-center gap-1 transition">
@@ -747,7 +755,185 @@
       '南部 魚中魚-楠梓店'
     ];
 
+    const APP_VERSION = 'v1.1.0';
     const STORAGE_KEY = 'haixiao_fish_wholesale_v7';
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAC3U04zejo5hQMrgAQkY8kmoTmgVFbYaw",
+      authDomain: "fish-order-58d3a.firebaseapp.com",
+      projectId: "fish-order-58d3a",
+      storageBucket: "fish-order-58d3a.firebasestorage.app",
+      messagingSenderId: "210105989677",
+      appId: "1:210105989677:web:b7957c428cad83cfeb16a4"
+    };
+
+    const FS_COLLECTION = 'haixiao_app';
+    let db = null;
+    let cloudReady = false;
+    let suppressCloudWrite = false;
+    let cloudSaveTimer = null;
+
+    function setSyncStatus(mode, text) {
+      const dot = document.getElementById('cloudSyncDot');
+      const label = document.getElementById('cloudSyncText');
+      if (!dot || !label) return;
+      label.textContent = text;
+      dot.className = 'inline-block w-2 h-2 rounded-full ' + (
+        mode === 'online' ? 'bg-emerald-400' :
+        mode === 'saving' ? 'bg-sky-300 animate-pulse' :
+        mode === 'error' ? 'bg-rose-400' : 'bg-amber-300'
+      );
+    }
+
+    async function pushAllStateToFirestore() {
+      if (!db || !cloudReady || suppressCloudWrite) return;
+      try {
+        setSyncStatus('saving', '同步至 Firebase 中...');
+        const ts = new Date().toISOString();
+        const col = db.collection(FS_COLLECTION);
+        const batch = db.batch();
+        batch.set(col.doc('inventory'), { items: state.inventory, updatedAt: ts });
+        batch.set(col.doc('stores'), { list: state.stores, updatedAt: ts });
+        batch.set(col.doc('orders'), {
+          orders: state.orders,
+          orderMeta: state.orderMeta,
+          orderPrinted: state.orderPrinted,
+          updatedAt: ts
+        });
+        batch.set(col.doc('shipments'), {
+          shipments: state.shipments,
+          shipDeducted: state.shipDeducted,
+          shipConfirmedAt: state.shipConfirmedAt,
+          updatedAt: ts
+        });
+        batch.set(col.doc('mortality'), { logs: state.mortalityLogs, updatedAt: ts });
+        batch.set(col.doc('history'), { records: state.shipmentHistory, updatedAt: ts });
+        await batch.commit();
+        setSyncStatus('online', `Firebase 已同步 (${FIREBASE_CONFIG.projectId})`);
+      } catch (err) {
+        console.warn('Firestore write error:', err);
+        if (err && err.code === 'permission-denied') {
+          setSyncStatus('error', 'Firebase 規則未開放寫入（目前本機暫存）');
+        } else {
+          setSyncStatus('error', '雲端同步失敗（已暫存本機）');
+        }
+      }
+    }
+
+    function scheduleCloudSave() {
+      if (!db || !cloudReady || suppressCloudWrite) return;
+      clearTimeout(cloudSaveTimer);
+      cloudSaveTimer = setTimeout(() => { pushAllStateToFirestore(); }, 350);
+    }
+
+    async function initFirebaseSync() {
+      if (typeof firebase === 'undefined') {
+        setSyncStatus('offline', '本機模式（未載入 Firebase SDK）');
+        return;
+      }
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        db = firebase.firestore();
+        const col = db.collection(FS_COLLECTION);
+
+        // Check if database already has inventory seeded
+        const invDoc = await col.doc('inventory').get();
+        cloudReady = true;
+
+        if (!invDoc.exists) {
+          setSyncStatus('saving', '首次建立 Firebase 初始資料...');
+          await pushAllStateToFirestore();
+          showToast('已將初始存貨與訂單同步至 Firebase 資料庫');
+        }
+
+        // Subscribe to real-time updates across all 6 documents
+        const rerenderActive = () => {
+          updateNavBadges();
+          if (state.activeTab === 'inventory') renderInventory();
+          if (state.activeTab === 'order') renderOrderTab();
+          if (state.activeTab === 'shipping') renderShippingTab();
+          if (state.activeTab === 'mortality') renderMortalityTab();
+          if (state.activeTab === 'history') renderHistoryTab();
+        };
+
+        const applyRemote = (fn) => {
+          suppressCloudWrite = true;
+          try {
+            fn();
+            saveLocalOnly();
+            rerenderActive();
+          } finally {
+            suppressCloudWrite = false;
+          }
+          setSyncStatus('online', `Firebase 即時同步中 (${FIREBASE_CONFIG.projectId})`);
+        };
+
+        col.doc('inventory').onSnapshot(snap => {
+          if (snap.exists && !snap.metadata.hasPendingWrites) {
+            const d = snap.data();
+            if (Array.isArray(d.items)) applyRemote(() => { state.inventory = d.items; });
+          }
+        }, err => handleSnapErr(err));
+
+        col.doc('stores').onSnapshot(snap => {
+          if (snap.exists && !snap.metadata.hasPendingWrites) {
+            const d = snap.data();
+            if (Array.isArray(d.list) && d.list.length > 0) applyRemote(() => { state.stores = d.list; });
+          }
+        }, err => handleSnapErr(err));
+
+        col.doc('orders').onSnapshot(snap => {
+          if (snap.exists && !snap.metadata.hasPendingWrites) {
+            const d = snap.data();
+            applyRemote(() => {
+              state.orders = d.orders || {};
+              state.orderMeta = d.orderMeta || {};
+              state.orderPrinted = d.orderPrinted || {};
+            });
+          }
+        }, err => handleSnapErr(err));
+
+        col.doc('shipments').onSnapshot(snap => {
+          if (snap.exists && !snap.metadata.hasPendingWrites) {
+            const d = snap.data();
+            applyRemote(() => {
+              state.shipments = d.shipments || {};
+              state.shipDeducted = d.shipDeducted || {};
+              state.shipConfirmedAt = d.shipConfirmedAt || {};
+            });
+          }
+        }, err => handleSnapErr(err));
+
+        col.doc('mortality').onSnapshot(snap => {
+          if (snap.exists && !snap.metadata.hasPendingWrites) {
+            const d = snap.data();
+            if (Array.isArray(d.logs)) applyRemote(() => { state.mortalityLogs = d.logs; });
+          }
+        }, err => handleSnapErr(err));
+
+        col.doc('history').onSnapshot(snap => {
+          if (snap.exists && !snap.metadata.hasPendingWrites) {
+            const d = snap.data();
+            if (Array.isArray(d.records)) applyRemote(() => { state.shipmentHistory = d.records; });
+          }
+        }, err => handleSnapErr(err));
+
+        setSyncStatus('online', `Firebase 即時同步中 (${FIREBASE_CONFIG.projectId})`);
+      } catch (err) {
+        console.warn('Firebase init error:', err);
+        handleSnapErr(err);
+      }
+    }
+
+    function handleSnapErr(err) {
+      if (err && err.code === 'permission-denied') {
+        setSyncStatus('error', 'Firestore 規則未開放讀寫（本機模式）');
+      } else {
+        setSyncStatus('offline', '離線／本機儲存模式');
+      }
+    }
 
     function buildGroupedStoreOptionsHtml(stores, selectedStore, extraSuffixFn = null) {
       const grouped = { '北部': [], '中部': [], '南部': [], '其他': [] };
@@ -968,7 +1154,7 @@
       saveState();
     }
 
-    function saveState() {
+    function saveLocalOnly() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
           inventory: state.inventory,
@@ -988,6 +1174,11 @@
           stickerConfig: state.stickerConfig
         }));
       } catch (e) {}
+    }
+
+    function saveState() {
+      saveLocalOnly();
+      scheduleCloudSave();
     }
 
     function showToast(msg, type = 'success') {
@@ -2897,7 +3088,9 @@
         showToast(`已篩選 ${today} 出貨紀錄`, 'info');
       });
 
+      document.getElementById('appVersionBadge').textContent = APP_VERSION;
       switchTab('inventory');
+      initFirebaseSync();
     });
   </script>
 </body>
